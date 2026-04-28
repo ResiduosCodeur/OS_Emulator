@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Page Replacement Algorithms · OS Emulator</title>
+  <meta name="description" content="Interactive animated simulation of FIFO, LRU, Optimal, MFU and LFU page replacement algorithms."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <a href="../index.html" class="brand-name">OS EMULATOR</a>
+    </div>
+    <span class="nav-module-label">/ Page Replacement</span>
+    <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank" rel="noopener" class="boot-btn">Code</a>
+  </nav>
+
+  <main class="page">
+
+    <!-- Hero -->
+    <section class="pr-hero">
+      <div class="hero-grid"></div>
+      <div class="pr-hero-content">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>MODULE 10 · PAGE REPLACEMENT</span>
+        </div>
+        <h1 class="pr-hero-title"><span class="accent">PAGE</span> REPLACEMENT</h1>
+        <p class="pr-hero-desc">Simulate FIFO · LRU · Optimal · MFU · LFU with animated step-by-step visualization</p>
+      </div>
+      <div class="corner-lbl corner-tl">MEM_MGR</div>
+      <div class="corner-lbl corner-tr">VIRT_MEM:ON</div>
+      <div class="corner-lbl corner-bl">PAGE_SIZE:4KB</div>
+      <div class="corner-lbl corner-br">TLB:READY</div>
+    </section>
+
+    <!-- ── Config Panel ── -->
+    <section class="config-section">
+      <div class="sec-hdr">
+        <span class="sec-title">Configuration</span>
+        <div class="sec-line"></div>
+      </div>
+
+      <div class="config-grid">
+
+        <!-- Algorithm Selector -->
+        <div class="config-card">
+          <div class="config-label">ALGORITHM</div>
+          <div class="algo-tabs" id="algo-tabs">
+            <button class="algo-tab active" data-algo="fifo">FIFO</button>
+            <button class="algo-tab"        data-algo="lru">LRU</button>
+            <button class="algo-tab"        data-algo="opt">OPTIMAL</button>
+            <button class="algo-tab"        data-algo="mfu">MFU</button>
+            <button class="algo-tab"        data-algo="lfu">LFU</button>
+          </div>
+          <div class="algo-desc-box">
+            <span class="algo-desc-text" id="algo-desc">First-In First-Out — replaces the page that has been in memory the longest.</span>
+          </div>
+        </div>
+
+        <!-- Parameters -->
+        <div class="config-card">
+          <div class="config-label">PARAMETERS</div>
+
+          <div class="param-row">
+            <span class="param-label">Frame Count</span>
+            <div class="stepper">
+              <button class="step-btn" id="frames-dec">−</button>
+              <span class="step-val"   id="frames-val">3</span>
+              <button class="step-btn" id="frames-inc">+</button>
+            </div>
+          </div>
+
+          <div class="param-row" style="margin-top:0.9rem;">
+            <span class="param-label">Reference String</span>
+            <button class="icon-btn" id="random-btn" title="Randomize">⟳</button>
+          </div>
+          <div class="ref-input-wrap">
+            <input
+              type="text" id="ref-input" class="ref-input"
+              value="7 0 1 2 0 3 0 4 2 3 0 3 2"
+              placeholder="e.g. 7 0 1 2 0 3 4"
+              spellcheck="false" autocomplete="off"
+            />
+          </div>
+
+          <div class="param-row" style="margin-top:0.9rem;">
+            <span class="param-label">Playback Speed</span>
+            <span class="speed-label" id="speed-label">1×</span>
+          </div>
+          <input type="range" id="speed-slider" class="speed-slider" min="1" max="5" value="2" step="1"/>
+
+          <div class="btn-row">
+            <button class="run-btn"   id="run-btn">▶ RUN</button>
+            <button class="ctrl-btn"  id="pause-btn"  disabled>⏸ PAUSE</button>
+            <button class="ctrl-btn"  id="step-btn"   disabled>STEP →</button>
+            <button class="reset-btn" id="reset-btn">↺</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Live Stats ── -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-chip">
+        <span class="stat-chip-lbl">STEP</span>
+        <span class="stat-chip-val"      id="stat-step">0</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-lbl">FAULTS</span>
+        <span class="stat-chip-val fault-val" id="stat-faults">0</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-lbl">HITS</span>
+        <span class="stat-chip-val hit-val"   id="stat-hits">0</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-lbl">FAULT RATE</span>
+        <span class="stat-chip-val"      id="stat-rate">—</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-lbl">HIT RATE</span>
+        <span class="stat-chip-val hit-val"   id="stat-hitrate">—</span>
+      </div>
+      <!-- Event badge -->
+      <div class="event-badge" id="event-badge"></div>
+    </div>
+
+    <!-- ── Visualization ── -->
+    <section class="viz-section" id="viz-section">
+
+      <!-- Reference string row -->
+      <div class="track-wrap">
+        <div class="track-label">REF</div>
+        <div class="track-scroll" id="ref-track"></div>
+      </div>
+
+      <!-- Frame rows (injected by JS) -->
+      <div id="frame-rows-wrap"></div>
+
+      <!-- Status row -->
+      <div class="track-wrap">
+        <div class="track-label">STATUS</div>
+        <div class="track-scroll" id="status-track"></div>
+      </div>
+
+    </section>
+
+    <!-- ── Comparison (post-run) ── -->
+    <section id="compare-section" style="display:none;">
+      <div class="sec-hdr">
+        <span class="sec-title">All Algorithms</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="compare-grid" id="compare-grid"></div>
+    </section>
+
+    <!-- ── Reference Info ── -->
+    <section class="info-section">
+      <div class="sec-hdr">
+        <span class="sec-title">Algorithm Reference</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="info-grid">
+
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="1"/><line x1="5" y1="3" x2="5" y2="13"/><line x1="10" y1="3" x2="10" y2="13"/></svg></div>
+            <span class="info-tag">FIFO</span>
+          </div>
+          <div class="info-title">First-In First-Out</div>
+          <div class="info-body">The oldest page in memory is always evicted first. Simple queue structure. Can suffer from <span class="hl">Bélády's anomaly</span> — more frames can mean more faults.</div>
+          <div class="info-complexity"><span class="hl">O(n)</span> · Stack O(f)</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/></svg></div>
+            <span class="info-tag">LRU</span>
+          </div>
+          <div class="info-title">Least Recently Used</div>
+          <div class="info-body">Evicts the page <span class="hl">not used for the longest time</span>. Good approximation of Optimal. Does not suffer from Bélády's anomaly.</div>
+          <div class="info-complexity"><span class="hl">O(n)</span> · Stack O(f)</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14 L8 2 L14 14"/><line x1="4.5" y1="10" x2="11.5" y2="10"/></svg></div>
+            <span class="info-tag">OPTIMAL</span>
+          </div>
+          <div class="info-title">Optimal (OPT)</div>
+          <div class="info-body">Evicts the page <span class="hl">not needed for the longest future time</span>. Requires future knowledge — used only as a theoretical benchmark.</div>
+          <div class="info-complexity"><span class="hl">O(n·f)</span> · Theoretical</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,13 5,5 9,9 13,3"/><circle cx="13" cy="3" r="1.5"/></svg></div>
+            <span class="info-tag">MFU</span>
+          </div>
+          <div class="info-title">Most Frequently Used</div>
+          <div class="info-body">Evicts the page with the <span class="hl">highest access count</span>, reasoning it has served its purpose. Counter-intuitive — useful for specific workloads.</div>
+          <div class="info-complexity"><span class="hl">O(n)</span> · Stack O(f)</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,13 5,9 9,11 13,3"/><circle cx="1" cy="13" r="1.5"/><circle cx="13" cy="3" r="1.5"/></svg></div>
+            <span class="info-tag">LFU</span>
+          </div>
+          <div class="info-title">Least Frequently Used</div>
+          <div class="info-body">Evicts the page with the <span class="hl">lowest access count</span>. Ties broken by LRU order. Works well with stable, predictable access patterns.</div>
+          <div class="info-complexity"><span class="hl">O(n)</span> · Stack O(f)</div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div>
+      <div class="fbrand"><span>OS_</span>EMULATOR</div>
+      <div class="fcopy">© 2026 S2 · Team 13 · Page Replacement Module</div>
+    </div>
+    <div class="flinks">
+      <a href="../index.html">← Home</a>
+      <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank">Github</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
