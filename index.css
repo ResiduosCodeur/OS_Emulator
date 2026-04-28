@@ -620,7 +620,7 @@ body {
 .fcopy {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(24, 95, 165, 0.6);
+  color: white;
   margin-top: 3px;
   letter-spacing: 0.06em;
 }
@@ -633,7 +633,7 @@ body {
 .flinks a {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(74, 157, 232, 0.5);
+  color: white;
   text-decoration: none;
   letter-spacing: 0.08em;
   transition: color 0.15s;
