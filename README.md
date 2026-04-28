@@ -1,4 +1,4 @@
-# OS Simulator - OS Lab Project
+# OS Mini-Project
 
 An OS Simulator project for the OS Lab course, implementing various core operating system concepts.
 
