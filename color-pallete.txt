@@ -1,0 +1,48 @@
+Backgrounds:
+
+#101219   /* page background */
+#020a14   /* hero background */
+#050e1d   /* card background (--blue-card) */
+#040f1f   /* badge background (--blue-xdark) */
+
+Blues:
+
+#4a9de8   /* primary accent — blue-mid, glow, active elements */
+#185FA5   /* base blue */
+#0C447C   /* dark blue */
+#8fbfe8   /* blue-200, secondary text/icons */
+#c8dff5   /* blue-100, headings/labels */
+#E6F1FB   /* blue-light, brightest text */
+
+Text Color:
+
+#ffffff           /* pure white — hero title "EMULATOR" */
+rgba(255,255,255,0.9)  /* card titles */
+rgba(0,251,255,0.7)    /* cyan-tinted desc text (mod-desc, stat-lbl) */
+rgba(143,191,232,0.7)  /* hero-desc muted text */
+
+Font Families:
+
+--font-mono: 'JetBrains Mono', monospace   /* body, labels, code, badges, nav links */
+--font-head: 'Syne', sans-serif            /* section titles, card names, team names */
+'Courier New', Courier, monospace          /* hero title "OS EMULATOR" — you're replacing this with Orbitron */
+
+Borders:
+
+rgba(24, 95, 165, 0.28)   /* default card border */
+rgba(24, 95, 165, 0.35)   /* nav border */
+rgba(74, 157, 232, 0.55)  /* hover card border */
+rgba(74, 157, 232, 0.40)  /* badge border */
+
+Avatar accent colors:
+
+#4a9de8   /* blue */
+#38bea0   /* teal */
+#b464e8   /* purple */
+#e88c3c   /* orange */
+#3cc878   /* green */
+#e85078   /* pink/red */
+#64a0e8   /* light blue */
+#e8c83c   /* yellow */
+#8c50e8   /* violet */
+#3cdcc8   /* cyan */

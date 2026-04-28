@@ -3,15 +3,15 @@
 An OS Simulator project for the OS Lab course, implementing various core operating system concepts.
 
 ## Team Members
-- 241CS251
-- 241CS252
-- 241CS253
-- 241CS254
-- 241CS255
-- 241CS256
-- 241CS257
-- 241CS258
-- 241CS260
+- Sachin Rohra - 241CS251
+- Samarth Talawar - 241CS252
+- Rohit Sannapuri - 241CS253
+- Reedham Shah - 241CS254
+- Shivam Kumar - 241CS255
+- John Vesli - 241CS256
+- Somyak Priyadarshi Mohanta - 241CS257
+- Sona Tudu - 241CS258
+- Srikarthik Sankarkumar - 241CS260
 
 ## Modules
 - **System Calls**
