@@ -1,4 +1,4 @@
-# OS Simulator - OS Lab Project
+# OS Mini-Project
 
 An OS Simulator project for the OS Lab course, implementing various core operating system concepts.
 
@@ -13,7 +13,7 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - Sona Tudu - 241CS258
 - Srikarthik Sankarkumar - 241CS260
 
-## Modules
+## Simulations
 - **System Calls**
 - **File Allocation**
 - **Simulation Of File System**
