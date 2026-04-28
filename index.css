@@ -293,9 +293,9 @@ body {
 }
 
 .hero-title {
-font-family: 'Orbitron', sans-serif;
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(36px, 8vw, 150px);  /* min: 36px, scales with viewport, max: 150px */
   font-weight: 900;
-  font-size: clamp(150px, 5.5vw, 72px);
   line-height: 1;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -673,6 +673,11 @@ font-family: 'Orbitron', sans-serif;
   width: calc(100% + 2rem); /* page has 1rem padding on mobile */
   margin-left: -1rem;
 }
+.hero-title {
+    font-size: clamp(28px, 7vw, 72px);
+    white-space: normal;        /* allow wrapping on very small screens */
+    text-align: center;
+  }
 }
 
 @media (max-width: 480px) {
