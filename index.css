@@ -43,7 +43,7 @@ body {
   background: rgba(2, 10, 20, 0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(24, 95, 165, 0.35);
+  /* border-bottom: 1px solid rgba(24, 95, 165, 0.35); */
   height: 80px;
 }
 
@@ -73,12 +73,12 @@ body {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 40px;
 }
 
 .nav-link {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 15px;
   color: var(--blue-200);
   padding: 5px 14px;
   border-radius: var(--radius-full);
@@ -97,8 +97,9 @@ body {
 }
 
 .boot-btn {
-  font-family: var(--font-head);
-  font-size: 12px;
+  font-family: var(--font-mono);
+  text-decoration: none;
+  font-size: 15px;
   font-weight: 600;
   padding: 7px 20px;
   background: var(--blue-mid);
@@ -119,8 +120,8 @@ body {
 
 /* ─── Page layout ─── */
 .page {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   padding: 1.5rem 2rem 3rem;
   display: flex;
   flex-direction: column;
@@ -216,15 +217,29 @@ body {
 /* ─── Hero ─── */
 .hero {
   position: relative;
-  height: 72vh;
+  height: 100vh;
+  width: calc(100% + 4rem); /* matches the page's 2rem padding on each side */
   min-height: 420px;
-  border: 1px solid rgba(24, 95, 165, 0.35);
   border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #020a14;
+  margin-top: -25px;
+  margin-left: -2rem; /* offsets the page padding */
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: linear-gradient(to bottom, transparent, #101219);
+  z-index: 3;
+  pointer-events: none;
 }
 
 #hero-canvas {
@@ -254,6 +269,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 14px;
+  margin-top: -60px;
 }
 
 .hero-eyebrow {
@@ -277,9 +293,9 @@ body {
 }
 
 .hero-title {
-  font-family: 'Courier New', Courier, monospace;
+font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
   font-size: clamp(150px, 5.5vw, 72px);
-  font-weight: 530;
   line-height: 1;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -371,7 +387,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 50px;
+  margin-top: 100px;
 }
 
 .sec-title {
@@ -394,6 +411,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+
 }
 
 .mod {
@@ -650,7 +668,11 @@ body {
   .mods { grid-template-columns: repeat(2, 1fr); }
   .team-grid { grid-template-columns: repeat(2, 1fr); }
   .footer { padding: 1rem; flex-direction: column; align-items: flex-start; gap: 12px; }
-  .hero { height: 60vh; }
+  .hero {
+  height: 60vh;
+  width: calc(100% + 2rem); /* page has 1rem padding on mobile */
+  margin-left: -1rem;
+}
 }
 
 @media (max-width: 480px) {
