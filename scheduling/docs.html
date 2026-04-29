@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kernel Level Documentation | CPU Scheduling Systems</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../index.css"/>
+    <link rel="stylesheet" href="cpu.css"/>
+    <style>
+        :root { 
+            --pro-green: #10b981;
+            --pro-red: #ef4444;
+            --pro-blue: #3b82f6;
+            --radiant-blue: #00fbff;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        body { 
+            scroll-behavior: smooth; 
+            background: #010810; 
+            color: #cbd5e1; 
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        .docs-container {
+            display: flex;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 40px;
+            gap: 40px;
+        }
+
+        /* MASSIVE SIDEBAR */
+        .sidebar-nav {
+            position: sticky;
+            top: 40px;
+            width: 350px;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        .nav-group { margin-bottom: 40px; }
+        .nav-header { font-family: 'Syne'; font-size: 11px; color: var(--radiant-blue); letter-spacing: 4px; margin-bottom: 15px; text-transform: uppercase; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+        .nav-item { display: block; padding: 12px 15px; color: #64748b; text-decoration: none; font-family: 'JetBrains Mono'; font-size: 13px; border-left: 2px solid transparent; transition: 0.3s; }
+        .nav-item:hover { color: #fff; background: rgba(255, 255, 255, 0.05); border-left-color: var(--radiant-blue); }
+
+        /* MAIN CONTENT AREA */
+        .main-docs { flex: 1; padding: 0 40px; min-width: 0; }
+        .algo-section { margin-bottom: 250px; scroll-margin-top: 50px; }
+        .title-main { font-family: 'Syne'; font-size: 72px; color: var(--radiant-blue); text-transform: uppercase; margin: 0; letter-spacing: -4px; line-height: 0.8; }
+        .algo-id { font-family: 'JetBrains Mono'; color: var(--pro-blue); font-size: 14px; margin-bottom: 20px; display: block; }
+        
+        .badge-row { display: flex; gap: 10px; margin: 30px 0; }
+        .badge-info { padding: 6px 15px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; border: 1px solid var(--radiant-blue); color: var(--radiant-blue); }
+        .badge-red { border-color: var(--pro-red); color: var(--pro-red); }
+
+        .desc-text { font-family: 'Inter', sans-serif; font-size: 17px; line-height: 2.1; color: #94a3b8; text-align: justify; margin-bottom: 40px; }
+        .sub-heading { font-family: 'Syne'; font-size: 26px; color: #fff; margin: 60px 0 30px 0; border-left: 5px solid var(--radiant-blue); padding-left: 20px; text-transform: uppercase; }
+
+        /* ALGORITHM STEPS BOX */
+        .logic-flow { background: #020c1b; border: 1px solid var(--glass-border); padding: 40px; border-radius: 12px; margin: 40px 0; position: relative; }
+        .logic-flow::before { content: "ALGORITHM_LOGIC"; position: absolute; top: -10px; right: 20px; background: var(--radiant-blue); color: #000; padding: 2px 10px; font-size: 10px; font-family: 'JetBrains Mono'; font-weight: 800; }
+        .logic-item { margin-bottom: 25px; display: flex; gap: 20px; font-family: 'Inter', sans-serif; font-size: 15px; }
+        .logic-num { color: var(--radiant-blue); font-family: 'Syne'; font-weight: 800; min-width: 30px; }
+
+        /* COMPLEX TRACE TABLES */
+        .table-wrap { overflow-x: auto; margin: 40px 0; border-radius: 8px; border: 1px solid var(--glass-border); }
+        .heavy-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; background: #000; }
+        .heavy-table th { background: #0f172a; color: #fff; padding: 20px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid var(--radiant-blue); }
+        .heavy-table td { padding: 18px; border: 1px solid #1e293b; text-align: center; color: #cbd5e1; font-size: 14px; }
+        .highlight-calc { color: var(--radiant-blue); font-weight: 700; }
+
+        /* GANTT VISUALS */
+        .gantt-master { background: #020a14; padding: 40px; border-radius: 12px; border: 1px solid var(--glass-border); margin: 40px 0; }
+        .gantt-lane { display: flex; height: 70px; border: 2px solid #334155; border-radius: 10px; overflow: hidden; }
+        .gantt-unit { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.1); font-family: 'Inter', sans-serif; font-weight: 800; font-size: 13px; color: #000; transition: 0.3s; }
+        .gantt-unit:hover { filter: brightness(1.2); }
+        .gantt-unit small { font-size: 9px; opacity: 0.8; margin-top: 4px; }
+        .gantt-timeline { display: flex; justify-content: space-between; padding: 15px 5px 0 5px; font-family: 'JetBrains Mono'; font-size: 12px; color: #64748b; }
+
+        /* ANALYTICS BOXES */
+        .analytics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin: 40px 0; }
+        .analyst-card { background: rgba(255,255,255,0.02); padding: 30px; border-radius: 12px; border-top: 4px solid var(--radiant-blue); }
+        .analyst-card h6 { margin: 0 0 15px 0; font-family: 'Syne'; color: #fff; font-size: 14px; text-transform: uppercase; }
+        .analyst-card ul { padding-left: 20px; color: #94a3b8; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.8; }
+
+        .formula-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--pro-blue); padding: 20px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 13px; color: var(--pro-blue); margin-bottom: 30px; }
+
+        /* COLORS */
+        .color-1 { background: #38bdf8; }
+        .color-2 { background: #4ade80; }
+        .color-3 { background: #fb7185; }
+        .color-4 { background: #fbbf24; }
+        .color-5 { background: #a78bfa; }
+        .color-idle { background: #1e293b; color: #64748b !important; }
+
+        .summary-stats { background: rgba(0, 251, 255, 0.05); padding: 25px; border-radius: 10px; border-left: 4px solid var(--radiant-blue); margin: 30px 0; }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 10px; font-family: 'JetBrains Mono'; }
+        .highlight { color: var(--radiant-blue); font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="docs-container">
+        <aside class="sidebar-nav">
+            <div class="nav-group">
+                <div class="nav-header">Non-Preemptive Core</div>
+                <a href="#fcfs" class="nav-item">01. First-Come First-Served</a>
+                <a href="#sjf-np" class="nav-item">02. Shortest Job First (NP)</a>
+                <a href="#pri-np" class="nav-item">03. Priority Scheduling (NP)</a>
+                <a href="#mlq-np" class="nav-item">04. Multi-Level Queue (NP)</a>
+            </div>
+            <div class="nav-group">
+                <div class="nav-header">Preemptive Engine</div>
+                <a href="#srtf" class="nav-item">05. SRTF (Preemptive SJF)</a>
+                <a href="#pri-p" class="nav-item">06. Priority Scheduling (P)</a>
+                <a href="#rr" class="nav-item">07. Round Robin (Time-Slice)</a>
+                <a href="#mlq-p" class="nav-item">08. Multi-Level Queue (P)</a>
+                <a href="#mlfq" class="nav-item">09. Multi-Level Feedback</a>
+            </div>
+        </aside>
+
+        <main class="main-docs">
+            
+            <section id="fcfs" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_01</span>
+                <h1 class="title-main">First-Come<br>First-Served</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Linear FIFO Queue</span>
+                    <span class="badge-info badge-red">Mode: Non-Preemptive</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview</div>
+                <p class="desc-text">
+                    First-Come, First-Served (FCFS) is the most fundamental CPU scheduling algorithm, operating on a strictly chronological basis. In this paradigm, the process that requests the CPU first is allocated the CPU first, managed through a standard First-In-First-Out (FIFO) queue. As a non-preemptive algorithm, once a process gains control of the CPU, it retains execution rights until it either terminates or initiates an I/O request. While conceptually simple, FCFS is highly sensitive to the arrival order and burst lengths. The most significant architectural weakness is the <strong>Convoy Effect</strong>: a phenomenon where several short processes are blocked by a single, massive CPU-bound process at the head of the queue, leading to poor device utilization and significantly inflated average waiting times.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Implementation Simplicity:</strong> Requires only a basic FIFO queue data structure, resulting in minimal development overhead.</li>
+                            <li><strong>Zero Preemption Overhead:</strong> No resources are wasted on frequent context switching or saving process states mid-execution.</li>
+                            <li><strong>Fairness in Order:</strong> Every process is treated equally based on its arrival time, ensuring no process is skipped or "jumped" in line.</li>
+                            <li><strong>Predictable Execution:</strong> For batch systems with known job lengths, the completion order is perfectly deterministic.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>The Convoy Effect:</strong> Short, interactive tasks experience massive latency if stuck behind a long-running computation task.</li>
+                            <li><strong>High Average Waiting Time (AWT):</strong> Compared to SJF or Round Robin, the average time a process spends in the ready queue is usually much higher.</li>
+                            <li><strong>Poor Resource Utilization:</strong> I/O devices may sit idle while a CPU-bound process monopolizes the processor.</li>
+                            <li><strong>Non-Responsive:</strong> Entirely unsuitable for modern interactive operating systems where users expect immediate feedback.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Algorithmic Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item">
+                        <span class="logic-num">01</span>
+                        <span>Initialize the global System Clock (T) to zero and clear the Ready Queue.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">02</span>
+                        <span>Sort all incoming processes into a list based on their Arrival Time (AT) in ascending order.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">03</span>
+                        <span>Fetch the first process from the sorted list. If AT > T, advance the System Clock (T) to the Arrival Time (creating idle CPU time).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">04</span>
+                        <span>Calculate the <strong>Completion Time (CT)</strong>: CT = T + Burst Time (BT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">05</span>
+                        <span>Update the System Clock (T) to the current Completion Time (CT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">06</span>
+                        <span>Calculate <strong>Turnaround Time (TAT)</strong>: TAT = Completion Time (CT) - Arrival Time (AT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">07</span>
+                        <span>Calculate <strong>Waiting Time (WT)</strong>: WT = Turnaround Time (TAT) - Burst Time (BT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">08</span>
+                        <span>Repeat steps 03 through 07 for every remaining process in the sorted list.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">09</span>
+                        <span>Compute the final System Performance metrics: Average TAT = ΣTAT / N and Average WT = ΣWT / N.</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>Process ID</th>
+                                <th>Arrival (AT)</th>
+                                <th>Burst (BT)</th>
+                                <th>Completion (CT)</th>
+                                <th>Turnaround (TAT)</th>
+                                <th>Waiting (WT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>0</td><td>10</td><td>10</td><td>10</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P2</td><td>2</td><td>5</td><td>15</td><td>13</td><td class="highlight-calc">8</td></tr>
+                            <tr><td>P3</td><td>3</td><td>8</td><td>23</td><td>20</td><td class="highlight-calc">12</td></tr>
+                            <tr><td>P4</td><td>5</td><td>2</td><td>25</td><td>20</td><td class="highlight-calc">18</td></tr>
+                            <tr><td>P5</td><td>7</td><td>4</td><td>29</td><td>22</td><td class="highlight-calc">18</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 34.4%;">P1 <small>(10)</small></div>
+                        <div class="gantt-unit color-2" style="width: 17.2%;">P2 <small>(5)</small></div>
+                        <div class="gantt-unit color-3" style="width: 27.5%;">P3 <small>(8)</small></div>
+                        <div class="gantt-unit color-4" style="width: 6.8%;">P4 <small>(2)</small></div>
+                        <div class="gantt-unit color-5" style="width: 14.1%;">P5 <small>(4)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>10</span><span>15</span><span>23</span><span>25</span><span>29</span>
+                    </div>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="stat-line"><span>Total Time to Execute All Jobs:</span><span class="highlight">29 ms</span></div>
+                    <div class="stat-line"><span>Average Turnaround Time:</span><span class="highlight">17.0 ms</span></div>
+                    <div class="stat-line"><span>Average Waiting Time:</span><span class="highlight">11.2 ms</span></div>
+                    <div class="stat-line"><span>CPU Throughput:</span><span class="highlight">0.17 processes/ms</span></div>
+                </div>
+            </section>
+
+            <section id="sjf-np" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_02</span>
+                <h1 class="title-main">Shortest Job<br>First (NP)</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Greedy Minimization</span>
+                    <span class="badge-info badge-red">Mode: Non-Preemptive</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview</div>
+                <p class="desc-text">
+                    Shortest Job First (SJF) is a scheduling discipline that selects the process with the smallest execution burst from the set of available processes in the ready queue. This algorithm is theoretically optimal as it provides the **minimum average waiting time** for a fixed set of processes. By clearing shorter tasks quickly, it reduces the number of processes waiting in the queue, thereby maximizing system throughput. However, its primary architectural challenge is the requirement for "Future Knowledge"—the OS must know or predict the length of the next CPU burst. In non-preemptive SJF, once a process begins execution, it cannot be interrupted, even if a significantly shorter process arrives later, ensuring stability at the cost of immediate responsiveness to new arrivals.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Optimal Efficiency:</strong> Provably yields the lowest possible average waiting time for any set of non-preemptive tasks.</li>
+                            <li><strong>High Throughput:</strong> Processes are completed and removed from the system at the fastest possible rate.</li>
+                            <li><strong>Reduced Queue Congestion:</strong> Prevents the buildup of small tasks that often occurs in FCFS due to the convoy effect.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>Starvation Risk:</strong> Longer processes may be delayed indefinitely if short-burst processes keep arriving (The "Indefinite Blocking" problem).</li>
+                            <li><strong>Estimation Complexity:</strong> Requires complex heuristics like Exponential Averaging to predict future burst times.</li>
+                            <li><strong>Unfairness:</strong> Prioritizes task length over arrival time, which may not be suitable for all user environments.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Algorithmic Selection Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item">
+                        <span class="logic-num">01</span>
+                        <span>Initialize the System Clock (T) and define a 'Completed' status flag for all processes.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">02</span>
+                        <span>Sort the master process list by Arrival Time (AT) to identify the initial entry point.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">03</span>
+                        <span>Scan the process list for all tasks where Arrival Time (AT) ≤ System Clock (T) and Status != 'Completed'.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">04</span>
+                        <span>From the filtered list, select the process with the **minimum Burst Time (BT)**.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">05</span>
+                        <span>In the event of a tie (two processes with equal BT), use Arrival Time (AT) as the tie-breaker (FCFS).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">06</span>
+                        <span>Update Completion Time (CT) = Current Clock (T) + Selected Process Burst Time (BT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">07</span>
+                        <span>Set Status = 'Completed' for the selected process and advance System Clock (T) = CT.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">08</span>
+                        <span>Calculate TAT (CT - AT) and WT (TAT - BT) for the finished process.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">09</span>
+                        <span>Repeat from Step 03 until the number of completed processes equals the total process count.</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table (Selection Trace)</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>Process ID</th>
+                                <th>Arrival (AT)</th>
+                                <th>Burst (BT)</th>
+                                <th>Completion (CT)</th>
+                                <th>Turnaround (TAT)</th>
+                                <th>Waiting (WT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>1</td><td>7</td><td>8</td><td>7</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P3</td><td>2</td><td>1</td><td>9</td><td>7</td><td class="highlight-calc">6</td></tr>
+                            <tr><td>P2</td><td>3</td><td>3</td><td>12</td><td>9</td><td class="highlight-calc">6</td></tr>
+                            <tr><td>P4</td><td>4</td><td>2</td><td>14</td><td>10</td><td class="highlight-calc">8</td></tr>
+                            <tr><td>P5</td><td>5</td><td>5</td><td>19</td><td>14</td><td class="highlight-calc">9</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-idle" style="width: 5.2%;">Idle</div>
+                        <div class="gantt-unit color-1" style="width: 36.8%;">P1 <small>(7)</small></div>
+                        <div class="gantt-unit color-3" style="width: 5.2%;">P3 <small>(1)</small></div>
+                        <div class="gantt-unit color-2" style="width: 15.7%;">P2 <small>(3)</small></div>
+                        <div class="gantt-unit color-4" style="width: 10.5%;">P4 <small>(2)</small></div>
+                        <div class="gantt-unit color-5" style="width: 26.3%;">P5 <small>(5)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>1</span><span>8</span><span>9</span><span>12</span><span>14</span><span>19</span>
+                    </div>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="stat-line"><span>Theoretical Efficiency:</span><span class="highlight">Maximum (Optimal WT)</span></div>
+                    <div class="stat-line"><span>Average Turnaround Time:</span><span class="highlight">9.4 ms</span></div>
+                    <div class="stat-line"><span>Average Waiting Time:</span><span class="highlight">5.8 ms</span></div>
+                    <div class="stat-line"><span>Burst Prediction Model:</span><span class="highlight">Exponential Averaging</span></div>
+                </div>
+            </section>
+            <section id="pri-np" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_03</span>
+                <h1 class="title-main">Priority<br>Scheduling (NP)</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Rank-Based Selection</span>
+                    <span class="badge-info badge-red">Mode: Non-Preemptive</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview</div>
+                <p class="desc-text">
+                    Priority Scheduling is a sophisticated discipline where each process is assigned a numerical priority value. The CPU is allocated to the process with the highest priority (typically the lowest numerical value in most kernel implementations). In the non-preemptive variant, the scheduler evaluates the priority of all processes currently in the ready queue and selects the most "urgent" one to run to completion. This model is essential for systems that must distinguish between critical system-level tasks and background user applications. However, it introduces the significant risk of <strong>Starvation</strong> (or Indefinite Blocking), where low-priority processes may never execute if high-priority tasks are continuously injected into the system. This is traditionally mitigated using an "Aging" technique, where a process's priority is incrementally increased the longer it waits in the queue.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Service Differentiation:</strong> Allows the OS to prioritize mission-critical tasks over standard processing.</li>
+                            <li><strong>System Stability:</strong> Ensures that vital system daemons and drivers receive CPU cycles before user-level code.</li>
+                            <li><strong>User Control:</strong> Provides a mechanism for users or administrators to manually influence task execution order via "nice" values.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>Indefinite Blocking:</strong> Low-priority processes can be completely starved of CPU time in a busy system.</li>
+                            <li><strong>Static Rigidity:</strong> Without dynamic aging, a process's importance remains fixed regardless of its wait time.</li>
+                            <li><strong>Overhead:</strong> Requires additional logic to manage priority queues and handle aging calculations.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Algorithmic Selection Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item">
+                        <span class="logic-num">01</span>
+                        <span>Initialize the System Clock (T) and the Priority Queue structure.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">02</span>
+                        <span>Assign a numerical Priority Value (P) to every process upon arrival.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">03</span>
+                        <span>At time T, identify all processes that have arrived (AT ≤ T) and are not yet completed.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">04</span>
+                        <span>Search the arrived processes for the one with the <strong>Highest Priority</strong> (Lowest Numerical Value).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">05</span>
+                        <span>If priorities are equal, use the FCFS (Arrival Time) rule as the secondary tie-breaker.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">06</span>
+                        <span>Dispatch the CPU to the selected process; it runs until the burst is fully exhausted (NP Mode).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">07</span>
+                        <span>Calculate CT = Current T + Burst Time, and advance the System Clock to CT.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">08</span>
+                        <span>Compute performance metrics: TAT = CT - AT and WT = TAT - BT.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">09</span>
+                        <span>Optionally apply the Aging Rule to increment the priority of all waiting processes before the next cycle.</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table (Priority Trace)</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>Process ID</th>
+                                <th>Arrival (AT)</th>
+                                <th>Burst (BT)</th>
+                                <th>Priority</th>
+                                <th>Completion (CT)</th>
+                                <th>Turnaround (TAT)</th>
+                                <th>Waiting (WT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>0</td><td>4</td><td>3</td><td>4</td><td>4</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P2</td><td>1</td><td>3</td><td class="highlight-calc">1</td><td>7</td><td>6</td><td class="highlight-calc">3</td></tr>
+                            <tr><td>P3</td><td>2</td><td>1</td><td class="highlight-calc">4</td><td>13</td><td>11</td><td class="highlight-calc">10</td></tr>
+                            <tr><td>P4</td><td>3</td><td>5</td><td class="highlight-calc">2</td><td>12</td><td>9</td><td class="highlight-calc">4</td></tr>
+                            <tr><td>P5</td><td>4</td><td>2</td><td class="highlight-calc">5</td><td>15</td><td>11</td><td class="highlight-calc">9</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 26.6%;">P1 <small>(4)</small></div>
+                        <div class="gantt-unit color-2" style="width: 20%;">P2 <small>(3)</small></div>
+                        <div class="gantt-unit color-4" style="width: 33.3%;">P4 <small>(5)</small></div>
+                        <div class="gantt-unit color-3" style="width: 6.7%;">P3 <small>(1)</small></div>
+                        <div class="gantt-unit color-5" style="width: 13.4%;">P5 <small>(2)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>4</span><span>7</span><span>12</span><span>13</span><span>15</span>
+                    </div>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="stat-line"><span>Starvation Management:</span><span class="highlight">Aging Mechanism Required</span></div>
+                    <div class="stat-line"><span>Average Turnaround Time:</span><span class="highlight">8.2 ms</span></div>
+                    <div class="stat-line"><span>Average Waiting Time:</span><span class="highlight">5.2 ms</span></div>
+                    <div class="stat-line"><span>Primary Metric:</span><span class="highlight">Process Urgency (P)</span></div>
+                </div>
+            </section>
+
+            <section id="mlq-np" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_04</span>
+                <h1 class="title-main">Multi-Level<br>Queue (NP)</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Partitioned Ready Queue</span>
+                    <span class="badge-info badge-red">Mode: Non-Preemptive Hierarchy</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview</div>
+                <p class="desc-text">
+                    Multi-Level Queue (MLQ) scheduling is designed for scenarios where processes can be easily classified into different groups based on their nature or priority requirements. In this architecture, the single Ready Queue is split into several separate queues, such as <strong>System Processes</strong>, <strong>Interactive Processes</strong>, and <strong>Batch Processes</strong>. Each queue has its own priority level and can even utilize its own independent scheduling algorithm (e.g., Round Robin for interactive tasks and FCFS for batch tasks). In the non-preemptive version, the scheduler strictly follows a top-down approach: it will only pick a process from a lower-priority queue if all higher-priority queues are completely empty. Once a process starts, it remains in control of the CPU until completion, even if a task arrives in a higher-level queue during its execution.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Specialized Handling:</strong> Different types of processes receive treatment optimized for their specific behavior (I/O vs CPU bound).</li>
+                            <li><strong>Low Scheduling Overhead:</strong> Processes are permanently assigned to a queue, reducing the complexity of moving data between structures.</li>
+                            <li><strong>Strict Isolation:</strong> High-priority system tasks are physically separated from low-priority background user tasks.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>Extreme Starvation:</strong> If the higher-level queues are constantly fed with new tasks, the lower-level queues may never execute.</li>
+                            <li><strong>Static Assignment:</strong> Processes cannot move between queues, leading to a lack of flexibility if a process changes behavior.</li>
+                            <li><strong>Inflexible Resource Allocation:</strong> A fixed percentage of CPU time cannot easily be guaranteed to lower queues without additional logic.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Queue Priority Hierarchy Table</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>Queue Level</th>
+                                <th>Process Class</th>
+                                <th>Priority Rank</th>
+                                <th>Assigned Algorithm</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Queue 0 (Q0)</td><td>System Critical</td><td>Highest</td><td class="highlight-calc">FCFS</td></tr>
+                            <tr><td>Queue 1 (Q1)</td><td>Interactive / UI</td><td>Medium</td><td class="highlight-calc">Round Robin</td></tr>
+                            <tr><td>Queue 2 (Q2)</td><td>Background Batch</td><td>Lowest</td><td class="highlight-calc">FCFS</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="sub-heading">9-Step Algorithmic Selection Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item">
+                        <span class="logic-num">01</span>
+                        <span>Categorize every incoming process and assign it permanently to a specific Queue (Qn).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">02</span>
+                        <span>Initialize System Clock (T) and monitor all N sub-queues simultaneously.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">03</span>
+                        <span>Identify the highest-priority non-empty queue (e.g., Q0 is checked before Q1).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">04</span>
+                        <span>Select the head process from that queue using its specific internal algorithm (e.g., FCFS).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">05</span>
+                        <span>Execute the selected process; the CPU is held until the process terminates (NP Mode).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">06</span>
+                        <span>Advance System Clock (T) = Current T + Process Burst Time (BT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">07</span>
+                        <span>Update all waiting processes' stats across all queues for Turnaround and Waiting time calculations.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">08</span>
+                        <span>Check for new arrivals during the execution window and place them into their respective queues.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">09</span>
+                        <span>Re-evaluate the highest-priority non-empty queue to select the next candidate for the CPU.</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table (Multi-Queue Trace)</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Arrival (AT)</th>
+                                <th>Burst (BT)</th>
+                                <th>Assigned Queue</th>
+                                <th>Completion (CT)</th>
+                                <th>Waiting (WT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>0</td><td>6</td><td class="highlight-calc">Q0 (System)</td><td>6</td><td>0</td></tr>
+                            <tr><td>P2</td><td>1</td><td>4</td><td class="highlight-calc">Q1 (Interactive)</td><td>10</td><td>5</td></tr>
+                            <tr><td>P3</td><td>2</td><td>3</td><td class="highlight-calc">Q0 (System)</td><td>13</td><td>8</td></tr>
+                            <tr><td>P4</td><td>5</td><td>8</td><td class="highlight-calc">Q2 (Batch)</td><td>21</td><td>8</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 28.5%;">P1 <small>(Q0)</small></div>
+                        <div class="gantt-unit color-5" style="width: 19%;">P2 <small>(Q1)</small></div>
+                        <div class="gantt-unit color-1" style="width: 14.3%;">P3 <small>(Q0)</small></div>
+                        <div class="gantt-unit color-2" style="width: 38.2%;">P4 <small>(Q2)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>6</span><span>10</span><span>13</span><span>21</span>
+                    </div>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="stat-line"><span>Queue Inter-dependency:</span><span class="highlight">Strict Priority Hierarchy</span></div>
+                    <div class="stat-line"><span>Global Throughput:</span><span class="highlight">0.19 processes/ms</span></div>
+                    <div class="stat-line"><span>Queue Isolation:</span><span class="highlight">Enabled (No Migration)</span></div>
+                </div>
+            </section>
+
+            <section id="srtf" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_05</span>
+                <h1 class="title-main">Shortest Remaining<br>Time First</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Dynamic Greedy Preemption</span>
+                    <span class="badge-info">Mode: Preemptive</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview</div>
+                <p class="desc-text">
+                    Shortest Remaining Time First (SRTF) is the preemptive counterpart to the SJF algorithm. In this model, the execution of a process can be interrupted if a new process arrives with a CPU burst length that is shorter than the <strong>remaining time</strong> of the currently executing process. The scheduler performs a comparison at every arrival event and every clock tick. This approach is highly efficient in terms of minimizing the Average Waiting Time (AWT) and Average Turnaround Time (TAT) because it ensures that the "quickest" tasks are always out of the system first. However, the architectural cost is significant: frequent preemption leads to increased context-switching overhead, as the system must constantly save and load Process Control Blocks (PCBs) whenever a "shorter" candidate enters the ready queue.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Optimal Performance:</strong> Provably the most efficient algorithm for minimizing average waiting time in a preemptive environment.</li>
+                            <li><strong>Superior Throughput:</strong> Small processes are completed with near-zero waiting time, clearing the queue rapidly.</li>
+                            <li><strong>Dynamic Adaptability:</strong> Responds instantly to new, short tasks, making it better for mixed workloads than non-preemptive SJF.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>Context Switch Bloat:</strong> If many small processes arrive sequentially, the CPU may spend more time switching than executing.</li>
+                            <li><strong>Starvation:</strong> Long-running processes may never finish if the system is constantly saturated with shorter tasks.</li>
+                            <li><strong>Estimation Overhead:</strong> Like SJF, it requires accurate burst time predictions to function effectively.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Algorithmic Selection Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item">
+                        <span class="logic-num">01</span>
+                        <span>Maintain a table of Remaining Burst Times (RT) for all arrived processes, initialized to their total BT.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">02</span>
+                        <span>At each unit of time (T), identify all processes that have arrived (AT ≤ T) and are not yet finished.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">03</span>
+                        <span>Select the process with the <strong>minimum Remaining Time (RT)</strong> from the available pool.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">04</span>
+                        <span>If a new process arrives with RT < current process RT, trigger an immediate preemption and context switch.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">05</span>
+                        <span>Decrement the RT of the currently executing process by 1 at every clock pulse.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">06</span>
+                        <span>If a process's RT reaches 0, mark it as 'Finished' and record the current T as its Completion Time (CT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">07</span>
+                        <span>Update System Clock (T = T + 1) and repeat the selection logic.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">08</span>
+                        <span>Calculate TAT = CT - AT and WT = TAT - BT (using the original Burst Time).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">09</span>
+                        <span>Aggregate all individual stats to determine global Mean Waiting Time and Mean Turnaround Time.</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table (Preemption Trace)</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>Process ID</th>
+                                <th>Arrival (AT)</th>
+                                <th>Burst (BT)</th>
+                                <th>Completion (CT)</th>
+                                <th>Turnaround (TAT)</th>
+                                <th>Waiting (WT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>0</td><td>8</td><td>17</td><td>17</td><td class="highlight-calc">9</td></tr>
+                            <tr><td>P2</td><td>1</td><td>4</td><td>5</td><td>4</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P3</td><td>2</td><td>9</td><td>26</td><td>24</td><td class="highlight-calc">15</td></tr>
+                            <tr><td>P4</td><td>3</td><td>5</td><td>10</td><td>7</td><td class="highlight-calc">2</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 3.8%;">P1</div>
+                        <div class="gantt-unit color-2" style="width: 15.4%;">P2 <small>(4)</small></div>
+                        <div class="gantt-unit color-4" style="width: 19.2%;">P4 <small>(5)</small></div>
+                        <div class="gantt-unit color-1" style="width: 26.9%;">P1 <small>(7)</small></div>
+                        <div class="gantt-unit color-3" style="width: 34.7%;">P3 <small>(9)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>1</span><span>5</span><span>10</span><span>17</span><span>26</span>
+                    </div>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="stat-line"><span>Preemption Events:</span><span class="highlight">3 Observed</span></div>
+                    <div class="stat-line"><span>Average Turnaround Time:</span><span class="highlight">13.0 ms</span></div>
+                    <div class="stat-line"><span>Average Waiting Time:</span><span class="highlight">6.5 ms</span></div>
+                    <div class="stat-line"><span>Efficiency Rating:</span><span class="highlight">Optimal (Preemptive)</span></div>
+                </div>
+            </section>
+
+            <section id="pri-p" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_06</span>
+                <h1 class="title-main">Priority<br>Scheduling (P)</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Immediate Interrupt</span>
+                    <span class="badge-info">Mode: Preemptive</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview</div>
+                <p class="desc-text">
+                    Preemptive Priority Scheduling is a real-time scheduling discipline where the CPU is always allocated to the process with the highest priority currently in the system. Unlike the non-preemptive version, if a process arrives at the ready queue with a priority higher than the currently running process, the kernel performs an immediate <strong>Context Switch</strong>. The running process is suspended, its state is saved back to its Process Control Block (PCB), and the CPU is granted to the new arrival. This ensures that critical system interrupts or high-priority user demands are serviced with the lowest possible latency. While this provides maximum responsiveness for "VIP" tasks, it significantly increases the complexity of the scheduler and makes the "Starvation" of low-priority tasks a constant operational risk.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Real-Time Responsiveness:</strong> High-priority tasks are guaranteed the CPU the microsecond they arrive.</li>
+                            <li><strong>Urgency Handling:</strong> Ideal for embedded systems or kernels where certain events (like hardware failures) must be handled instantly.</li>
+                            <li><strong>Granular Control:</strong> Provides total control over task execution order based on importance rather than time.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>High Overhead:</strong> Constant priority comparisons and potential context switches at every arrival event consume CPU cycles.</li>
+                            <li><strong>Extreme Starvation:</strong> Low-priority tasks can remain in the 'Ready' state indefinitely if high-priority traffic is high.</li>
+                            <li><strong>Data Inconsistency:</strong> Preempting a process mid-calculation requires robust synchronization to prevent memory corruption.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Algorithmic Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item">
+                        <span class="logic-num">01</span>
+                        <span>Maintain a sorted list of all active processes based on their Priority Value (P).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">02</span>
+                        <span>At each clock cycle (T), check the priority of the arriving process against the current process.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">03</span>
+                        <span>If New_P < Current_P (where lower is higher priority), save the current process state and preempt.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">04</span>
+                        <span>Update the Remaining Burst Time (RT) of the preempted process.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">05</span>
+                        <span>Execute the highest-priority task for one time unit or until a higher-priority task arrives.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">06</span>
+                        <span>When a process completes (RT=0), record the current T as the Completion Time (CT).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">07</span>
+                        <span>Select the next highest priority process from the ready queue to resume or start.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">08</span>
+                        <span>Apply the Aging formula: P = P - 1 for every X units a process spends waiting in the queue.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">09</span>
+                        <span>Calculate final stats: TAT = CT - AT and WT = TAT - Original_BT.</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table (Preemption Trace)</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>Process ID</th>
+                                <th>Arrival (AT)</th>
+                                <th>Burst (BT)</th>
+                                <th>Priority</th>
+                                <th>Completion (CT)</th>
+                                <th>Turnaround (TAT)</th>
+                                <th>Waiting (WT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>0</td><td>10</td><td>3</td><td>20</td><td>20</td><td class="highlight-calc">10</td></tr>
+                            <tr><td>P2</td><td>1</td><td>1</td><td class="highlight-calc">1</td><td>2</td><td>1</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P3</td><td>2</td><td>2</td><td class="highlight-calc">4</td><td>22</td><td>20</td><td class="highlight-calc">18</td></tr>
+                            <tr><td>P4</td><td>3</td><td>1</td><td class="highlight-calc">2</td><td>4</td><td>1</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P5</td><td>4</td><td>5</td><td class="highlight-calc">2</td><td>9</td><td>5</td><td class="highlight-calc">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 4.5%;">P1</div>
+                        <div class="gantt-unit color-2" style="width: 4.5%;">P2 <small>(1)</small></div>
+                        <div class="gantt-unit color-1" style="width: 4.5%;">P1</div>
+                        <div class="gantt-unit color-4" style="width: 4.5%;">P4 <small>(1)</small></div>
+                        <div class="gantt-unit color-5" style="width: 22.8%;">P5 <small>(5)</small></div>
+                        <div class="gantt-unit color-1" style="width: 36.4%;">P1 <small>(8)</small></div>
+                        <div class="gantt-unit color-3" style="width: 9.1%;">P3 <small>(2)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>9</span><span>17</span><span>19</span>
+                    </div>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="stat-line"><span>Context Switches:</span><span class="highlight">5 Forced Interrupts</span></div>
+                    <div class="stat-line"><span>Response Time (P2):</span><span class="highlight">0 ms (Immediate)</span></div>
+                    <div class="stat-line"><span>Average Waiting Time:</span><span class="highlight">5.6 ms</span></div>
+                    <div class="stat-line"><span>Scheduling Complexity:</span><span class="highlight">O(log N)</span></div>
+                </div>
+            </section>
+
+            <section id="rr" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_07</span>
+                <h1 class="title-main">Round Robin<br>Scheduling</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Time-Slicing Cyclic Queue</span>
+                    <span class="badge-info">Mode: Preemptive (Clock-Driven)</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview</div>
+                <p class="desc-text">
+                    Round Robin (RR) is the foundational scheduling algorithm for all modern time-sharing operating systems. It defines a rigid unit of time called the <strong>Time Quantum (δ)</strong> or Time Slice. The CPU scheduler treats the ready queue as a circular FIFO structure, granting each process a maximum of one Time Quantum. If a process's burst exceeds the quantum, it is forcibly preempted, its context is saved, and it is appended to the tail of the queue. This ensures that every process receives a fair share of the CPU and provides a guaranteed upper bound on response time, making it ideal for user-facing environments where interactivity is key. The efficiency of RR is heavily dependent on the size of the Time Quantum: if too large, it degrades into FCFS; if too small, the system collapses under context-switching overhead.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Maximum Fairness:</strong> Every process is guaranteed a CPU slice in every (N-1)δ time units, preventing any single task from monopolizing the processor.</li>
+                            <li><strong>Superior Responsiveness:</strong> Excellent for interactive applications where the user expects immediate feedback from multiple open programs.</li>
+                            <li><strong>Starvation-Free:</strong> By design, no process is ever blocked indefinitely regardless of its total burst size.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>Context Overhead:</strong> Frequent preemption leads to high context-switching latency, which can consume significant CPU cycles.</li>
+                            <li><strong>Quantum Sensitivity:</strong> Finding the "Sweet Spot" for the Time Quantum is difficult and often requires empirical tuning.</li>
+                            <li><strong>High Average Waiting Time:</strong> Because processes are constantly interrupted, the AWT is typically higher than in SJF or SRTF.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Algorithmic Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item">
+                        <span class="logic-num">01</span>
+                        <span>Define a fixed Time Quantum (δ) and initialize an empty FIFO Ready Queue.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">02</span>
+                        <span>Push all processes arriving at T=0 into the Ready Queue in the order of their arrival.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">03</span>
+                        <span>Pop the first process (P_curr) from the head of the queue and execute for time = min(Remaining_Burst, δ).</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">04</span>
+                        <span>Continuously monitor for any new process arrivals during the execution of P_curr.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">05</span>
+                        <span>Upon arrival, immediately push new processes to the tail of the Ready Queue.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">06</span>
+                        <span>If P_curr finishes its burst within the quantum, calculate its Completion Time (CT) immediately.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">07</span>
+                        <span>If P_curr exceeds the quantum, preempt it and push it to the tail of the queue *after* any new arrivals from Step 05.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">08</span>
+                        <span>Repeat the process until the Ready Queue is null and no more processes are expected.</span>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-num">09</span>
+                        <span>Aggregate TAT (CT - AT) and WT (TAT - BT) to assess total system efficiency.</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Heavy Benchmarking (Time Quantum δ = 3)</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>Process ID</th>
+                                <th>Arrival (AT)</th>
+                                <th>Burst (BT)</th>
+                                <th>Completion (CT)</th>
+                                <th>Turnaround (TAT)</th>
+                                <th>Waiting (WT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>0</td><td>9</td><td>22</td><td>22</td><td class="highlight-calc">13</td></tr>
+                            <tr><td>P2</td><td>1</td><td>4</td><td>15</td><td>14</td><td class="highlight-calc">10</td></tr>
+                            <tr><td>P3</td><td>2</td><td>5</td><td>23</td><td>21</td><td class="highlight-calc">16</td></tr>
+                            <tr><td>P4</td><td>4</td><td>2</td><td>12</td><td>8</td><td class="highlight-calc">6</td></tr>
+                            <tr><td>P5</td><td>6</td><td>3</td><td>18</td><td>12</td><td class="highlight-calc">9</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 13%;">P1 <small>(3/9)</small></div>
+                        <div class="gantt-unit color-2" style="width: 13%;">P2 <small>(3/4)</small></div>
+                        <div class="gantt-unit color-3" style="width: 13%;">P3 <small>(3/5)</small></div>
+                        <div class="gantt-unit color-1" style="width: 13%;">P1 <small>(6/9)</small></div>
+                        <div class="gantt-unit color-2" style="width: 4.5%;">P2 <small>(4/4)</small></div>
+                        <div class="gantt-unit color-4" style="width: 9%;">P4 <small>(2/2)</small></div>
+                        <div class="gantt-unit color-1" style="width: 13%;">P1 <small>(9/9)</small></div>
+                        <div class="gantt-unit color-5" style="width: 13%;">P5 <small>(3/3)</small></div>
+                        <div class="gantt-unit color-3" style="width: 8.5%;">P3 <small>(5/5)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>3</span><span>6</span><span>9</span><span>12</span><span>13</span><span>15</span><span>18</span><span>21</span><span>23</span>
+                    </div>
+                </div>
+
+                <div class="summary-stats">
+                    <div class="stat-line"><span>Ideal Quantum Range:</span><span class="highlight">10ms - 100ms</span></div>
+                    <div class="stat-line"><span>Context Switches:</span><span class="highlight">8 Events</span></div>
+                    <div class="stat-line"><span>Average Waiting Time:</span><span class="highlight">10.8 ms</span></div>
+                    <div class="stat-line"><span>System Fairness:</span><span class="highlight">Absolute (100%)</span></div>
+                </div>
+            </section>
+           <section id="mlq-p" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_08</span>
+                <h1 class="title-main">Multi-Level<br>Queue (P)</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Tiered Interrupt Engine</span>
+                    <span class="badge-info">Mode: Strict Preemption</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview & Preemption Logic</div>
+                <p class="desc-text">
+                    The Preemptive Multi-Level Queue (MLQ) is a sophisticated kernel-level scheduling architecture where the Ready Queue is partitioned into multiple distinct sub-queues based on process priority or type. Each queue operates with a strict dominance hierarchy (e.g., Q0 > Q1 > Q2). 
+                    <br><br>
+                    In the <strong>Preemptive variant</strong>, the scheduler enforces immediate CPU reclamation. If the processor is currently executing a task from a lower-priority tier (like a background batch job in Q2) and a high-priority task arrives in a superior tier (like a system interrupt in Q0), the kernel triggers an immediate <strong>Context Switch</strong>. The state of the lower-priority process is saved into its Process Control Block (PCB), and the CPU is instantly dispatched to the higher-tier arrival. This architecture ensures near-zero latency for mission-critical tasks but requires careful management to prevent lower tiers from complete starvation.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Guaranteed Response:</strong> High-priority system tasks are never delayed by user-level processes.</li>
+                            <li><strong>Hardware Isolation:</strong> Effectively separates time-critical I/O handling from standard computation.</li>
+                            <li><strong>Organizational Clarity:</strong> Allows different scheduling policies to be applied to different types of tasks (e.g., RR for interactive, FCFS for batch).</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>Static Rigidity:</strong> Processes are permanently tied to a queue; they cannot adapt if their behavior changes.</li>
+                            <li><strong>Starvation Risk:</strong> Lower-tier processes can be indefinitely blocked if higher-priority queues are constantly busy.</li>
+                            <li><strong>Interrupt Overhead:</strong> Frequent preemptions between tiers can degrade overall system throughput due to context-switch costs.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Queue Level</th>
+                                <th>AT</th>
+                                <th>BT</th>
+                                <th>CT</th>
+                                <th>TAT</th>
+                                <th>WT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>Q0 (High)</td><td>0</td><td>4</td><td>4</td><td>4</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P2</td><td>Q1 (Med)</td><td>1</td><td>8</td><td>16</td><td>15</td><td class="highlight-calc">7</td></tr>
+                            <tr><td>P3</td><td>Q0 (High)</td><td>5</td><td>4</td><td>9</td><td>4</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P4</td><td>Q2 (Low)</td><td>10</td><td>6</td><td>22</td><td>12</td><td class="highlight-calc">6</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 18.2%;">P1 <small>(Q0)</small></div>
+                        <div class="gantt-unit color-2" style="width: 4.5%;">P2 <small>(Q1)</small></div>
+                        <div class="gantt-unit color-1" style="width: 18.2%;">P3 <small>(Q0)</small></div>
+                        <div class="gantt-unit color-2" style="width: 31.8%;">P2 <small>(Q1-Res)</small></div>
+                        <div class="gantt-unit color-4" style="width: 27.3%;">P4 <small>(Q2)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>4</span><span>5</span><span>9</span><span>16</span><span>22</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Implementation Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item"><span class="logic-num">01</span><span>Define Q0, Q1, and Q2 with a strict priority order (Q0 > Q1 > Q2).</span></div>
+                    <div class="logic-item"><span class="logic-num">02</span><span>Assign incoming processes to their respective queues (P1, P3 &rarr; Q0; P2 &rarr; Q1; P4 &rarr; Q2).</span></div>
+                    <div class="logic-item"><span class="logic-num">03</span><span>P1 arrives at T=0 and occupies the CPU. P2 arrives at T=1 and enters Q1 ready queue.</span></div>
+                    <div class="logic-item"><span class="logic-num">04</span><span>At T=4, P1 finishes. Q0 is now empty, so the CPU is granted to P2 in Q1.</span></div>
+                    <div class="logic-item"><span class="logic-num">05</span><span>At T=5, P3 arrives in Q0. Since Q0 > Q1, P2 is immediately preempted (7ms remaining).</span></div>
+                    <div class="logic-item"><span class="logic-num">06</span><span>P3 executes until T=9. At T=9, Q0 becomes empty.</span></div>
+                    <div class="logic-item"><span class="logic-num">07</span><span>Scheduler resumes P2 from Q1; it executes its remaining 7ms until T=16.</span></div>
+                    <div class="logic-item"><span class="logic-num">08</span><span>At T=16, both Q0 and Q1 are empty. P4 from Q2 is finally dispatched and finishes at T=22.</span></div>
+                    <div class="logic-item"><span class="logic-num">09</span><span>Final Calculation: TAT = CT - AT and WT = TAT - BT.</span></div>
+                </div>
+            </section>
+
+            <section id="mlfq" class="algo-section">
+                <span class="algo-id">SYSTEM_KERNEL_MOD_09</span>
+                <h1 class="title-main">Multi-Level<br>Feedback Queue</h1>
+                <div class="badge-row">
+                    <span class="badge-info">Architecture: Adaptive Migration Engine</span>
+                    <span class="badge-info">Mode: Dynamic Feedback Loop</span>
+                </div>
+
+                <div class="sub-heading">Detailed Architectural Overview & Adaptive Feedback</div>
+                <p class="desc-text">
+                    Multi-Level Feedback Queue (MLFQ) is the industry-standard scheduling algorithm for general-purpose OS kernels (NT, Unix-like). Unlike standard MLQ, it does not rely on static process classification. Instead, it <strong>learns and adapts</strong> based on the execution profile of each task. 
+                    <br><br>
+                    The core philosophy is simple: favor short, interactive, or I/O-bound tasks and penalize long-running, CPU-intensive background tasks. If a process exhausts its full time quantum in a high-priority queue (Q0), the scheduler "punishes" it by demoting it to a lower-priority queue (Q1). If it exhausts the Q1 quantum, it is demoted to the FCFS queue (Q2). This allows the system to achieve the low response time of "Shortest Job First" without requiring any prior knowledge of the process's burst time. To prevent starvation of demoted tasks, a periodic <strong>Priority Boost</strong> promotes all tasks back to Q0, ensuring every process eventually gets CPU time.
+                </p>
+
+                <div class="analytics-grid">
+                    <div class="analyst-card">
+                        <h6>Technical Advantages</h6>
+                        <ul>
+                            <li><strong>Optimal Responsiveness:</strong> Interactive processes finish in the top tier with almost zero wait time.</li>
+                            <li><strong>Dynamic Flexibility:</strong> Processes can change their behavior (from CPU-bound to I/O-bound) and the scheduler will adjust accordingly.</li>
+                            <li><strong>Auto-Balancing:</strong> Naturally balances throughput and latency without manual administrative tuning.</li>
+                        </ul>
+                    </div>
+                    <div class="analyst-card" style="border-top-color: var(--pro-red);">
+                        <h6>Technical Disadvantages</h6>
+                        <ul>
+                            <li><strong>High Complexity:</strong> Implementing the migration logic and boosting timers is extremely complex in a kernel.</li>
+                            <li><strong>Context Switching:</strong> Frequent demotions and pre-emptions increase the overall system overhead.</li>
+                            <li><strong>Parameter Sensitivity:</strong> System performance depends heavily on the chosen TQ values and the boost interval.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sub-heading">Performance Benchmark Table</div>
+                <div class="table-wrap">
+                    <table class="heavy-table">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>AT</th>
+                                <th>BT</th>
+                                <th>CT</th>
+                                <th>TAT</th>
+                                <th>WT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1</td><td>0</td><td>4</td><td>4</td><td>4</td><td class="highlight-calc">0</td></tr>
+                            <tr><td>P2</td><td>1</td><td>30</td><td>46</td><td>45</td><td class="highlight-calc">15</td></tr>
+                            <tr><td>P3</td><td>5</td><td>12</td><td>40</td><td>35</td><td class="highlight-calc">23</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gantt-master">
+                    <div class="gantt-lane">
+                        <div class="gantt-unit color-1" style="width: 8.7%;">P1 <small>(Q0)</small></div>
+                        <div class="gantt-unit color-2" style="width: 17.4%;">P2 <small>(Q0)</small></div>
+                        <div class="gantt-unit color-3" style="width: 17.4%;">P3 <small>(Q0)</small></div>
+                        <div class="gantt-unit color-2" style="width: 34.8%;">P2 <small>(Q1)</small></div>
+                        <div class="gantt-unit color-3" style="width: 8.7%;">P3 <small>(Q1)</small></div>
+                        <div class="gantt-unit color-2" style="width: 13%;">P2 <small>(Q2)</small></div>
+                    </div>
+                    <div class="gantt-timeline">
+                        <span>0</span><span>4</span><span>12</span><span>20</span><span>36</span><span>40</span><span>46</span>
+                    </div>
+                </div>
+
+                <div class="sub-heading">9-Step Adaptive Logic</div>
+                <div class="logic-flow">
+                    <div class="logic-item"><span class="logic-num">01</span><span>Initialize Q0 (TQ=8ms), Q1 (TQ=16ms), and Q2 (FCFS).</span></div>
+                    <div class="logic-item"><span class="logic-num">02</span><span>P1 enters Q0 at T=0 and finishes at T=4 (BT=4 is less than 8ms).</span></div>
+                    <div class="logic-item"><span class="logic-num">03</span><span>P2 starts in Q0 at T=4. It exhausts the 8ms quantum at T=12 and is demoted to Q1.</span></div>
+                    <div class="logic-item"><span class="logic-num">04</span><span>P3 enters Q0 at T=12. It exhausts its 8ms quantum at T=20 and is demoted to Q1.</span></div>
+                    <div class="logic-item"><span class="logic-num">05</span><span>With Q0 empty, CPU moves to Q1. P2 runs for 16ms (T=20 to T=36).</span></div>
+                    <div class="logic-item"><span class="logic-num">06</span><span>P2 still has 6ms remaining (30 - 8 - 16 = 6), so it is demoted to the Q2 FCFS queue.</span></div>
+                    <div class="logic-item"><span class="logic-num">07</span><span>P3 is next in Q1. It only needs 4ms more (12 - 8 = 4). It finishes at T=40.</span></div>
+                    <div class="logic-item"><span class="logic-num">08</span><span>Q0 and Q1 are now empty. P2 enters Q2 to finish its final 6ms at T=46.</span></div>
+                    <div class="logic-item"><span class="logic-num">09</span><span>Calculate Stats: Turnaround (TAT) = CT - AT; Waiting Time (WT) = TAT - BT.</span></div>
+                </div>
+            </section>
+            
+
+        </main>
+    </div>
+</body>
+</html>

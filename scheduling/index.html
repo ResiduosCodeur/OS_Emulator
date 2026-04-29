@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CPU Scheduling | OS EMULATOR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="../index.css"/>
+    <link rel="stylesheet" href="cpu.css"/>
+</head>
+<body>
+    <nav class="topbar">
+        <div class="brand">
+            <div class="brand-dot"></div>
+            <span class="brand-name">OS EMULATOR</span>
+        </div>
+        <div class="nav-links">
+            <a class="nav-link" href="../index.html">Home</a>
+            <a class="nav-link github-link" href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank">Code</a>
+        </div>
+    </nav>
+
+    <main class="page">
+        <section class="sec-hdr">
+            <span class="sec-title">9-Algorithm Scheduling Simulator</span>
+            <div class="sec-line"></div>
+        </section>
+
+        <div class="stats-row">
+            <div class="stat"><div class="stat-lbl">AVG. WAITING</div><div class="stat-val" id="avg-wt">0.00</div></div>
+            <div class="stat"><div class="stat-lbl">AVG. TURNAROUND</div><div class="stat-val" id="avg-tat">0.00</div></div>
+        </div>
+
+        <div class="sim-layout">
+            <aside class="panel">
+                <div class="input-grp">
+                    <label>Main Algorithm</label>
+                    <select id="algo-master">
+                        <optgroup label="Basic">
+                            <option value="fcfs">1. FCFS (NP)</option>
+                            <option value="sjf">2. SJF (NP)</option>
+                            <option value="srtf">3. SRTF (P)</option>
+                        </optgroup>
+                        <optgroup label="Priority">
+                            <option value="p-np">4. Priority (NP)</option>
+                            <option value="p-p">5. Priority (P)</option>
+                        </optgroup>
+                        <optgroup label="Advanced">
+                            <option value="rr">6. Round Robin (P)</option>
+                            <option value="mlq-np">7. MLQ (Inter-Q NP)</option>
+                            <option value="mlq-p">8. MLQ (Inter-Q P)</option>
+                            <option value="mlfq">9. MLFQ (P)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div id="queue-designer" class="designer-card" style="display:none;">
+                    <label class="label-tech">Queue Configurator</label>
+                    <div id="queue-list" class="queue-list"></div>
+                    <div class="row-input" style="margin-top:10px;">
+                        <button id="btn-add-q" class="boot-btn" style="font-size:10px; padding:8px; flex:1;">+ Add</button>
+                        <button id="btn-rem-q" class="boot-btn btn-reset" style="font-size:10px; padding:8px; flex:1; margin-top:0;">- Remove</button>
+                    </div>
+                </div>
+
+                <div id="single-q-config" class="input-grp" style="display:none;">
+                    <label>Global Quantum</label>
+                    <input type="number" id="global-quantum" value="2" min="1">
+                </div>
+
+                <div class="input-grp">
+                    <label>Process Input</label>
+                    <div class="row-input">
+                        <input type="text" id="p-name" placeholder="ID">
+                        <input type="number" id="p-at" placeholder="AT">
+                        <input type="number" id="p-bt" placeholder="BT">
+                    </div>
+                    <div class="row-input" style="margin-top:8px;">
+                        <input type="number" id="p-pri" placeholder="Priority (1=High)" style="display:none;">
+                        <select id="p-target-q" style="display:none;"></select>
+                    </div>
+                    <button id="add-btn" class="boot-btn" style="width:100%; margin-top:15px;">Add Process</button>
+                </div>
+
+                <button id="run-btn" class="boot-btn" style="width:100%; margin-top:20px;">Run Simulation</button>
+                <button id="reset-btn" class="boot-btn btn-reset" style="width:100%;">Reset System</button>
+            </aside>
+
+            <section class="viz">
+                <div class="viz-card">
+                    <span class="label-tech">Gantt Visualization</span>
+                    <div id="g-chart" class="g-chart"></div>
+                    <div id="g-axis" class="g-axis"></div>
+                </div>
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>PID</th><th>AT</th><th>BT</th>
+                                <th class="col-pri" style="display:none;">PRI</th>
+                                <th class="col-q" style="display:none;">Q</th>
+                                <th>CT</th><th>TAT</th><th>WT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="res-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+       <section class="info-section">
+            <h2 class="sec-title">Algorithm Encyclopedia</h2>
+            <div class="info-grid">
+                <a href="docs.html#fcfs" class="info-card">
+                    <div class="card-header">
+                        <h3>FCFS</h3>
+                        <span class="badge-tech">NP</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Logic:</strong> Standard FIFO execution. First arrival maintains CPU control until burst completion.</p>
+                        <ul class="card-specs">
+                            <li><strong>Problem:</strong> Convoy Effect (Short jobs stuck behind long ones).</li>
+                            <li><strong>Metric:</strong> High Average Waiting Time (AWT).</li>
+                            <li><strong>Use Case:</strong> Batch systems with low interactivity.</li>
+                        </ul>
+                    </div>
+                    <span class="read-more">Technical Specs →</span>
+                </a>
+                
+                <a href="docs.html#sjf-np" class="info-card">
+                    <div class="card-header">
+                        <h3>SJF / SRTF</h3>
+                        <span class="badge-tech">NP / P</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Logic:</strong> Prioritizes processes with the smallest CPU burst requirement.</p>
+                        <ul class="card-specs">
+                            <li><strong>Efficiency:</strong> Mathematically optimal for minimum AWT.</li>
+                            <li><strong>Risk:</strong> Potential starvation for long-duration tasks.</li>
+                            <li><strong>SRTF:</strong> Preemptive version that checks arrivals at every unit.</li>
+                        </ul>
+                    </div>
+                    <span class="read-more">Technical Specs →</span>
+                </a>
+                
+                <a href="docs.html#pri-np" class="info-card">
+                    <div class="card-header">
+                        <h3>Priority</h3>
+                        <span class="badge-tech">NP / P</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Logic:</strong> CPU is allocated based on assigned rank (Integer-based priority).</p>
+                        <ul class="card-specs">
+                            <li><strong>Constraint:</strong> High priority interrupts low priority (Preemptive).</li>
+                            <li><strong>Aging:</strong> Required to prevent low-priority jobs from never running.</li>
+                            <li><strong>Use Case:</strong> Real-time and mission-critical kernels.</li>
+                        </ul>
+                    </div>
+                    <span class="read-more">Technical Specs →</span>
+                </a>
+
+                <a href="docs.html#rr" class="info-card">
+                    <div class="card-header">
+                        <h3>Round Robin</h3>
+                        <span class="badge-tech">P</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Logic:</strong> Cyclic execution using a fixed Time Quantum (δ) or slice.</p>
+                        <ul class="card-specs">
+                            <li><strong>Fairness:</strong> No starvation; every job gets a slice of time.</li>
+                            <li><strong>Responsiveness:</strong> Excellent for interactive time-sharing systems.</li>
+                            <li><strong>Overhead:</strong> Performance depends on Context Switch vs Quantum size.</li>
+                        </ul>
+                    </div>
+                    <span class="read-more">Technical Specs →</span>
+                </a>
+
+                <a href="docs.html#mlq-np" class="info-card">
+                    <div class="card-header">
+                        <h3>MLQ</h3>
+                        <span class="badge-tech">Fixed Tiers</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Logic:</strong> Partitions ready queue into separate tiers (System, User, Batch).</p>
+                        <ul class="card-specs">
+                            <li><strong>Hierarchy:</strong> Strict dominance (Q0 > Q1 > Q2).</li>
+                            <li><strong>Stability:</strong> Tasks never change their assigned queue level.</li>
+                            <li><strong>Optimization:</strong> Different algorithms can run on different tiers.</li>
+                        </ul>
+                    </div>
+                    <span class="read-more">Technical Specs →</span>
+                </a>
+
+                <a href="docs.html#mlfq" class="info-card">
+                    <div class="card-header">
+                        <h3>MLFQ</h3>
+                        <span class="badge-tech">Adaptive P</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Logic:</strong> Dynamic migration of tasks based on execution history/behavior.</p>
+                        <ul class="card-specs">
+                            <li><strong>Learning:</strong> Demotes CPU-hogs and favors I/O-bound tasks.</li>
+                            <li><strong>Goal:</strong> Minimizes Response Time without prior burst knowledge.</li>
+                            <li><strong>Industry:</strong> Standard in modern Unix/Windows NT kernels.</li>
+                        </ul>
+                    </div>
+                    <span class="read-more">Technical Specs →</span>
+                </a>
+            </div>
+        </section>
+    </main>
+    <script src="cpu.js"></script>
+</body>
+</html>
