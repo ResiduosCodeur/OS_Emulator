@@ -23,3 +23,4 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - **CPU Scheduling Algorithms**
 - **Internal and External Memory fragmentation**
 - **Page replacement**
+- **Boot Process Simulation**
