@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Boot Process Simulation · OS Emulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav class="topbar">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <a href="../index.html" class="brand-name">OS EMULATOR</a>
+      </div>
+      <span class="nav-module-label">/ Boot Process</span>
+      <a
+        href="https://github.com/ResiduosCodeur/OS_Emulator"
+        target="_blank"
+        rel="noopener"
+        class="boot-btn"
+        >Code</a
+      >
+    </nav>
+
+    <main class="page">
+      <!-- Hero -->
+      <section class="pr-hero">
+        <div class="hero-grid"></div>
+        <div class="pr-hero-content">
+          <div class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            <span>MODULE 10 · Boot Process</span>
+          </div>
+          <h1 class="pr-hero-title">
+            <span class="accent">OS</span> BOOT SIMULATION
+          </h1>
+          <p class="pr-hero-desc">
+            Visualize the complete boot sequence from Power On to User Space
+            with memory &amp; disk animations
+          </p>
+        </div>
+        <div class="corner-lbl corner-tl">POWER_ON</div>
+        <div class="corner-lbl corner-tr">BIOS_MODE</div>
+        <div class="corner-lbl corner-bl">BOOT_SIM</div>
+        <div class="corner-lbl corner-br">READY</div>
+      </section>
+
+      <!-- Control Panel -->
+      <section class="config-section">
+        <div class="sec-hdr">
+          <span class="sec-title">⚡ Control Panel</span>
+          <div class="sec-line"></div>
+        </div>
+
+        <div class="boot-controls">
+          <button id="startBtn" class="btn btn-primary">
+            <span class="btn-icon">▶</span> Start Boot
+          </button>
+          <!-- NEW: Pause/Resume button -->
+          <button id="pauseBtn" class="btn btn-pause" disabled>
+            <span class="btn-icon">⏸</span> Pause
+          </button>
+          <div class="step-nav-group" aria-label="Step navigation">
+            <button id="prevStepBtn" class="btn btn-secondary btn-step" disabled>
+              <span class="btn-icon">&lt;</span> Previous
+            </button>
+            <button id="nextStepBtn" class="btn btn-secondary btn-step">
+              <span class="btn-icon">&gt;</span> Next
+            </button>
+          </div>
+          <button id="resetBtn" class="btn btn-secondary">
+            <span class="btn-icon">↻</span> Reset
+          </button>
+          <div class="speed-control">
+            <label for="speedSlider">Simulation Speed:</label>
+            <input
+              type="range"
+              id="speedSlider"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value="1"
+            />
+            <span id="speedLabel">1.0x</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 1: Boot Progress + System Visualization -->
+      <section class="layout-row">
+        <!-- Boot Progress Stepper -->
+        <div class="layout-col">
+          <div class="boot-section">
+            <div class="sec-hdr">
+              <span class="sec-title">📊 Boot Progress</span>
+              <div class="sec-line"></div>
+            </div>
+
+            <div class="boot-stepper">
+              <div class="stepper-step" data-step="power-on">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <div class="step-title">Power On</div>
+                  <div class="step-desc">CPU initialization</div>
+                </div>
+                <div class="step-status">◯</div>
+              </div>
+
+              <div class="stepper-connector"></div>
+
+              <div class="stepper-step" data-step="bios">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <div class="step-title">BIOS / UEFI</div>
+                  <div class="step-desc">Hardware check (POST)</div>
+                </div>
+                <div class="step-status">◯</div>
+              </div>
+
+              <div class="stepper-connector"></div>
+
+              <div class="stepper-step" data-step="bootloader">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <div class="step-title">Bootloader</div>
+                  <div class="step-desc">GRUB / Boot code</div>
+                </div>
+                <div class="step-status">◯</div>
+              </div>
+
+              <div class="stepper-connector"></div>
+
+              <div class="stepper-step" data-step="kernel">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                  <div class="step-title">Kernel Load</div>
+                  <div class="step-desc">Initialize subsystems</div>
+                </div>
+                <div class="step-status">◯</div>
+              </div>
+
+              <div class="stepper-connector"></div>
+
+              <div class="stepper-step" data-step="init">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                  <div class="step-title">Init System</div>
+                  <div class="step-desc">Start services (PID=1)</div>
+                </div>
+                <div class="step-status">◯</div>
+              </div>
+
+              <div class="stepper-connector"></div>
+
+              <div class="stepper-step" data-step="userspace">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                  <div class="step-title">User Space</div>
+                  <div class="step-desc">System Ready ✓</div>
+                </div>
+                <div class="step-status">◯</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System State Visualization -->
+        <div class="layout-col">
+          <div class="boot-section">
+            <div class="sec-hdr">
+              <span class="sec-title">🧠 System Visualization</span>
+              <div class="sec-line"></div>
+            </div>
+
+            <div class="viz-grid-compact">
+              <!-- Memory Visualization -->
+              <div class="viz-panel memory-panel">
+                <div class="panel-header">
+                  <h3>💾 Memory</h3>
+                  <span id="memoryStatus" class="status-badge">Empty</span>
+                </div>
+                <div class="memory-container">
+                  <div class="memory-block" id="memBlock-kernel">
+                    <div class="memory-label">Kernel</div>
+                    <div class="memory-size">0 KB</div>
+                  </div>
+                  <div class="memory-block" id="memBlock-drivers">
+                    <div class="memory-label">Drivers</div>
+                    <div class="memory-size">0 KB</div>
+                  </div>
+                  <div class="memory-block" id="memBlock-services">
+                    <div class="memory-label">Services</div>
+                    <div class="memory-size">0 KB</div>
+                  </div>
+                  <div class="memory-block empty" id="memBlock-free">
+                    <div class="memory-label">Free Space</div>
+                    <div class="memory-size">32 MB</div>
+                  </div>
+                </div>
+                <div class="memory-details">
+                  <div class="detail-item">
+                    <span>Total RAM:</span>
+                    <span id="totalRam">32 MB</span>
+                  </div>
+                  <div class="detail-item">
+                    <span>Used:</span>
+                    <span id="usedRam">0 MB</span>
+                  </div>
+                  <div class="detail-item">
+                    <span>Free:</span>
+                    <span id="freeRam">32 MB</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Disk Visualization -->
+              <div class="viz-panel disk-panel">
+                <div class="panel-header">
+                  <h3>💽 Disk → RAM Transfer</h3>
+                  <span id="diskStatus" class="status-badge">Idle</span>
+                </div>
+                <div class="disk-transfer-container">
+                  <div class="disk-section">
+                    <div class="section-label">Disk</div>
+                    <div class="disk-blocks" id="diskBlocks">
+                      <div class="disk-block bootloader">Boot</div>
+                      <div class="disk-block kernel">Kernel</div>
+                      <div class="disk-block drivers">Drivers</div>
+                      <div class="disk-block rootfs">RootFS</div>
+                    </div>
+                  </div>
+
+                  <!-- Transfer channel: arrow + flying packet track -->
+                  <div class="transfer-animation">
+                    <div class="transfer-channel">
+                      <div class="transfer-arrow" id="transferArrow">→</div>
+                      <!-- Packets fly through this track -->
+                      <div class="transfer-track" id="transferTrack"></div>
+                    </div>
+                  </div>
+
+                  <div class="ram-section">
+                    <div class="section-label">RAM</div>
+                    <div class="ram-blocks" id="ramBlocks">
+                      <div class="ram-block" id="ram-block-1">─</div>
+                      <div class="ram-block" id="ram-block-2">─</div>
+                      <div class="ram-block" id="ram-block-3">─</div>
+                      <div class="ram-block" id="ram-block-4">─</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="transfer-details">
+                  <div class="detail-item">
+                    <span>Transfer Speed:</span>
+                    <span id="transferSpeed">0 MB/s</span>
+                  </div>
+                  <div class="detail-item">
+                    <span>Data Transferred:</span>
+                    <span id="dataTransferred">0 MB</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 2: Current Step Details + Active Processes -->
+      <section class="layout-row">
+        <!-- Current Step Details -->
+        <div class="layout-col">
+          <div class="boot-section">
+            <div class="sec-hdr">
+              <span class="sec-title">📌 Current Step Details</span>
+              <div class="sec-line"></div>
+            </div>
+
+            <div class="step-details-container">
+              <div id="stepDetails" class="step-details">
+                <div class="detail-content">
+                  <h3 id="detailTitle">Awaiting Boot Sequence</h3>
+                  <p id="detailDesc">
+                    Click "Start Boot" to begin the simulation
+                  </p>
+                  <div id="detailTimeline" class="detail-timeline">
+                    <!-- Timeline will be populated -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Process Table -->
+        <div class="layout-col">
+          <div class="boot-section">
+            <div class="sec-hdr">
+              <span class="sec-title">⚙️ Active Processes</span>
+              <div class="sec-line"></div>
+            </div>
+
+            <div class="viz-panel process-panel full-height">
+              <div class="panel-header">
+                <h3>Running Processes</h3>
+                <span id="processCount" class="status-badge">0</span>
+              </div>
+              <div class="process-table">
+                <div class="table-header">
+                  <div class="col col-pid">PID</div>
+                  <div class="col col-name">Process Name</div>
+                  <div class="col col-status">Status</div>
+                  <div class="col col-mem">Memory</div>
+                </div>
+                <div class="table-body" id="processTable">
+                  <!-- Processes will be added here dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 3: Boot Flow Diagram + System Log -->
+      <section class="layout-row">
+        <!-- Boot Flow Diagram -->
+        <div class="layout-col">
+          <div class="boot-section">
+            <div class="sec-hdr">
+              <span class="sec-title">🔄 Boot Flow Diagram</span>
+              <div class="sec-line"></div>
+            </div>
+
+            <div class="boot-flow">
+              <div class="flow-box">
+                <div class="flow-title">Power On</div>
+                <div class="flow-desc">CPU @ 0xFFF0</div>
+              </div>
+              <div class="flow-arrow">↓</div>
+
+              <div class="flow-box">
+                <div class="flow-title">BIOS / UEFI</div>
+                <div class="flow-desc">POST Check</div>
+              </div>
+              <div class="flow-arrow">↓</div>
+
+              <div class="flow-box">
+                <div class="flow-title">Bootloader</div>
+                <div class="flow-desc">GRUB Loads Kernel</div>
+              </div>
+              <div class="flow-arrow">↓</div>
+
+              <div class="flow-box">
+                <div class="flow-title">Kernel</div>
+                <div class="flow-desc">Init Memory/Drivers</div>
+              </div>
+              <div class="flow-arrow">↓</div>
+
+              <div class="flow-box">
+                <div class="flow-title">Init System</div>
+                <div class="flow-desc">Start Services</div>
+              </div>
+              <div class="flow-arrow">↓</div>
+
+              <div class="flow-box success">
+                <div class="flow-title">User Space Ready</div>
+                <div class="flow-desc">Login Screen ✓</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Log -->
+        <div class="layout-col">
+          <div class="boot-section">
+            <div class="sec-hdr">
+              <span class="sec-title">📋 System Log</span>
+              <div class="sec-line"></div>
+            </div>
+
+            <div class="viz-panel system-log-panel full-height">
+              <div class="panel-header">
+                <h3>System Output</h3>
+                <button id="clearLogBtn" class="btn-small">Clear</button>
+              </div>
+              <div class="system-log" id="systemLog">
+                <div class="log-entry init">
+                  [SYS] Awaiting boot sequence...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <div class="fbrand"><span>OS_</span>EMULATOR</div>
+        <div class="fcopy">© 2026 S2 · Team 13 · Boot Process Simulation</div>
+      </div>
+      <div class="flinks">
+        <a href="../index.html">← Home</a>
+        <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank"
+          >Github</a
+        >
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
