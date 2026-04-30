@@ -9,23 +9,32 @@
     <link rel="stylesheet" href="cpu.css"/>
 </head>
 <body>
-    <nav class="topbar">
-        <div class="brand">
-            <div class="brand-dot"></div>
-            <span class="brand-name">OS EMULATOR</span>
-        </div>
-        <div class="nav-links">
-            <a class="nav-link" href="../index.html">Home</a>
-            <a class="nav-link github-link" href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank">Code</a>
-        </div>
-    </nav>
+   <nav class="topbar">
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <a href="../index.html" class="brand-name">OS EMULATOR</a>
+  </div>
+  <span class="nav-module-label">/ CPU Scheduling Simulation</span>
+</nav>
 
     <main class="page">
-        <section class="sec-hdr">
-            <span class="sec-title">9-Algorithm Scheduling Simulator</span>
-            <div class="sec-line"></div>
+        <section class="pr-hero">
+        <div class="hero-grid"></div>
+        <div class="pr-hero-content">
+            <div class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            <span>MODULE 09 · Process Management</span>
+            </div>
+            <h1 class="pr-hero-title">
+            <span class="accent">OS</span> - CPU SCHEDULING - SIMULATION
+            </h1>
+            <p class="pr-hero-desc">
+            Visualize process lifecycle, context switching, and multi-level queue scheduling.
+            </p>
+        </div>
+        <div class="corner-lbl corner-tl">KERNEL_SPACE</div>
+        <div class="corner-lbl corner-br">SYSTEM_ACTIVE</div>
         </section>
-
         <div class="stats-row">
             <div class="stat"><div class="stat-lbl">AVG. WAITING</div><div class="stat-val" id="avg-wt">0.00</div></div>
             <div class="stat"><div class="stat-lbl">AVG. TURNAROUND</div><div class="stat-val" id="avg-tat">0.00</div></div>
@@ -209,6 +218,16 @@
             </div>
         </section>
     </main>
+    
+    <footer class="footer">
+      <div>
+        <div class="fbrand"><span>OS_</span>EMULATOR</div>
+        <div class="fcopy">© 2026 S2 · Team 13 · CPU SCHEDULING Simulation</div>
+      </div>
+      <div class="flinks">
+        <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank">Github</a>
+      </div>
+    </footer>
     <script src="cpu.js"></script>
 </body>
 </html>
