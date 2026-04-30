@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deadlock Detection · OS Emulator</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <nav class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <a href="../index.html" class="brand-name">OS EMULATOR</a>
+    </div>
+    <span class="nav-module-label">/ Deadlock Detection</span>
+    <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank" class="boot-btn">Code</a>
+  </nav>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-grid"></div>
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>MODULE · RESOURCE ALLOCATION GRAPH</span>
+        </div>
+        <h1><span>DEADLOCK</span> DETECTION</h1>
+        <p>
+          Visualize processes, resources, request edges, allocation edges, and detect cycles in a Resource Allocation Graph.
+        </p>
+      </div>
+      <div class="corner corner-tl">RAG_SIM</div>
+      <div class="corner corner-tr">DFS:ON</div>
+      <div class="corner corner-bl">CYCLE_CHECK</div>
+      <div class="corner corner-br">READY</div>
+    </section>
+
+    <section class="content-section">
+      <div class="sec-hdr">
+        <span class="sec-title">Configuration</span>
+        <div class="sec-line"></div>
+      </div>
+
+      <div class="config-grid">
+        <div class="control-panel">
+          <h2>Graph Input</h2>
+
+          <div class="input-group">
+            <label>Processes</label>
+            <input id="processes" class="input-field" value="P1 P2 P3" />
+          </div>
+
+          <div class="input-group">
+            <label>Resources</label>
+            <input id="resources" class="input-field" value="R1 R2" />
+          </div>
+
+          <div class="input-group">
+            <label>Request Edges: Process → Resource</label>
+            <input id="requests" class="input-field" value="P1-R1 P2-R2" />
+          </div>
+
+          <div class="input-group">
+            <label>Allocation Edges: Resource → Process</label>
+            <input id="allocations" class="input-field" value="R1-P2 R2-P1" />
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="runSimulation()">Detect Deadlock</button>
+            <button class="btn btn-ghost" onclick="loadDeadlockExample()">Deadlock Example</button>
+            <button class="btn btn-ghost" onclick="loadSafeExample()">Safe Example</button>
+            <button class="btn btn-danger" onclick="clearAll()">Clear</button>
+          </div>
+        </div>
+
+        <div class="control-panel explanation">
+          <h2>How to Enter</h2>
+          <p><b>Processes:</b> P1 P2 P3</p>
+          <p><b>Resources:</b> R1 R2</p>
+          <p><b>Request:</b> P1-R1 means P1 is requesting R1</p>
+          <p><b>Allocation:</b> R1-P2 means R1 is allocated to P2</p>
+          <p class="hint">
+            Deadlock occurs when the Resource Allocation Graph contains a cycle.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="visual-section">
+      <div class="sec-hdr">
+        <span class="sec-title">Resource Allocation Graph</span>
+        <div class="sec-line"></div>
+      </div>
+
+      <div class="viz-grid">
+        <div class="graph-panel">
+          <svg id="graph" viewBox="0 0 900 420"></svg>
+        </div>
+
+        <div class="result-panel">
+          <h2>Analysis</h2>
+          <div id="status" class="status neutral">Waiting for simulation</div>
+
+          <div class="stat-card">
+            <span class="stat-title">Cycle Path</span>
+            <span id="cyclePath" class="stat-value">None</span>
+          </div>
+
+          <div class="legend">
+            <div><span class="dot process"></span> Process</div>
+            <div><span class="dot resource"></span> Resource</div>
+            <div><span class="line request"></span> Request Edge</div>
+            <div><span class="line allocation"></span> Allocation Edge</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="log-section">
+      <div class="sec-hdr">
+        <span class="sec-title">System Log</span>
+        <div class="sec-line"></div>
+      </div>
+      <div id="log" class="log-container"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
