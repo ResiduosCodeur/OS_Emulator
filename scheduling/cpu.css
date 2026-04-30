@@ -251,3 +251,111 @@ td {
     font-weight: 700;
 }
 
+/* ─── Footer Styles (Friend's Implementation) ─── */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 2rem;
+  background: var(--blue-xdark); /* Darkest background (#040f1f) */
+  border-top: 1px solid rgba(24, 95, 165, 0.3); /* The blue horizontal line */
+  margin-top: auto; /* Pushes footer to bottom if page is short */
+}
+
+.fbrand {
+  font-family: var(--font-head); /* Syne font */
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-200);
+}
+
+.fbrand span {
+  color: var(--blue-mid); /* The glowing blue "OS_" text */
+}
+
+.fcopy {
+  font-family: var(--font-mono); /* JetBrains Mono font */
+  font-size: 11px;
+  color: white;
+  margin-top: 3px;
+  letter-spacing: 0.06em;
+}
+
+.flinks {
+  display: flex;
+  gap: 16px;
+}
+
+.flinks a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 0.15s;
+}
+
+.flinks a:hover {
+  color: var(--blue-200); /* Lightens on hover */
+}
+/* --- CENTERED & SINGLE LINE TITLE --- */
+
+.pr-hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center; /* Centers text horizontally[cite: 3] */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers flex items horizontally[cite: 3] */
+  width: 100%;
+}
+
+.pr-hero-title {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 900;
+  /* Reduced size to ensure it fits on one line */
+  font-size: clamp(18px, 3.5vw, 32px); 
+  color: var(--blue-light);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  margin: 10px 0;
+  
+  /* CRITICAL: Force single line[cite: 3] */
+  white-space: nowrap; 
+  display: inline-block;
+}
+
+.pr-hero-title .accent {
+  color: var(--blue-mid); /* Glowing accent color[cite: 3, 5] */
+  text-shadow: 0 0 30px rgba(74, 157, 232, 0.4);
+}
+
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--blue-mid);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.pr-hero-desc {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(143, 191, 232, 0.7);
+  letter-spacing: 0.05em;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue-mid);
+  box-shadow: 0 0 8px var(--blue-mid);
+  animation: blink 1.4s ease-in-out infinite;
+}
