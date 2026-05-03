@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Allocation · OS Emulator</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav class="topbar">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <a href="../index.html" class="brand-name">OS EMULATOR</a>
+      </div>
+      <span class="nav-module-label">/ File Allocation</span>
+      <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank" rel="noopener" class="boot-btn">Code</a>
+    </nav>
+
+    <main class="page">
+      <!-- Hero -->
+      <section class="pr-hero">
+        <div class="hero-grid"></div>
+        <div class="pr-hero-content">
+          <div class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            <span>MODULE 2 · File Allocation</span>
+          </div>
+          <h1 class="pr-hero-title">
+            <span class="accent">FILE</span> ALLOCATION
+          </h1>
+          <p class="pr-hero-desc">
+            Simulate Contiguous · Linked · Indexed File Allocation Systems with visualization
+          </p>
+        </div>
+        <div class="corner-lbl corner-tl">FILE_SYS</div>
+        <div class="corner-lbl corner-tr">DISK_MGR:ON</div>
+        <div class="corner-lbl corner-bl">ALLOC_SIM</div>
+        <div class="corner-lbl corner-br">READY</div>
+      </section>
+
+      <!-- ── Config Panel ── -->
+      <section class="config-section">
+        <div class="sec-hdr">
+          <span class="sec-title">Configuration</span>
+          <div class="sec-line"></div>
+        </div>
+
+        <section class="content-section">
+          <div class="config-grid">
+            <!-- Input Controls -->
+            <div class="control-panel">
+              <h2 class="section-title">Allocation Configuration</h2>
+
+              <div class="input-grid">
+                <!-- Allocation Method -->
+                <div class="input-group">
+                  <label for="alloc-method" class="input-label">Allocation Method</label>
+                  <select id="alloc-method" class="input-field">
+                    <option value="contiguous">Contiguous Allocation</option>
+                    <option value="linked">Linked Allocation</option>
+                    <option value="indexed">Indexed Allocation</option>
+                  </select>
+                </div>
+
+                <!-- Disk Size -->
+                <div class="input-group">
+                  <label for="disk-size" class="input-label">Total Disk Blocks</label>
+                  <input type="number" id="disk-size" class="input-field" value="20" min="5" max="50" />
+                </div>
+
+                <!-- File Name -->
+                <div class="input-group">
+                  <label for="file-name" class="input-label">File Name</label>
+                  <input type="text" id="file-name" class="input-field" value="file1" placeholder="e.g., file1" />
+                </div>
+
+                <!-- File Size -->
+                <div class="input-group">
+                  <label for="file-size" class="input-label">File Size (Blocks)</label>
+                  <input type="number" id="file-size" class="input-field" value="4" min="1" max="20" />
+                </div>
+              </div>
+
+              <!-- ── Linked Allocation Panel ── -->
+              <div id="linked-panel" class="method-panel" style="display:none;">
+                <div class="method-panel-header">
+                  <span class="method-panel-icon">⛓</span>
+                  <span class="method-panel-title">Linked Allocation — Block Selection</span>
+                </div>
+
+                <div class="mode-toggle">
+                  <label class="mode-option">
+                    <input type="radio" name="linked-mode" id="linked-mode-random" value="random" checked />
+                    <span class="mode-label">
+                      <span class="mode-icon">🎲</span>
+                      Auto-Random
+                    </span>
+                  </label>
+                  <label class="mode-option">
+                    <input type="radio" name="linked-mode" id="linked-mode-manual" value="manual" />
+                    <span class="mode-label">
+                      <span class="mode-icon">✏️</span>
+                      Manual Entry
+                    </span>
+                  </label>
+                </div>
+
+                <div class="panel-body">
+                  <button id="linked-randomize-btn" class="btn btn-ghost btn-sm">
+                    <span>🎲</span> Randomize Blocks
+                  </button>
+
+                  <div id="linked-manual-section" style="display:none;">
+                    <div class="input-group">
+                      <label class="input-label">Block Numbers <span class="input-hint">(comma or space separated, order matters)</span></label>
+                      <input type="text" id="linked-blocks-input" class="input-field" placeholder="e.g., 3, 11, 7, 2" />
+                      <p class="field-help">Enter exactly <strong id="linked-count-hint">N</strong> block numbers matching your file size. The order defines the linked chain.</p>
+                    </div>
+                  </div>
+
+                  <div id="linked-preview" class="block-preview" style="display:none;"></div>
+                </div>
+              </div>
+
+              <!-- ── Indexed Allocation Panel ── -->
+              <div id="indexed-panel" class="method-panel" style="display:none;">
+                <div class="method-panel-header">
+                  <span class="method-panel-icon">📇</span>
+                  <span class="method-panel-title">Indexed Allocation — Block Selection</span>
+                </div>
+
+                <div class="mode-toggle">
+                  <label class="mode-option">
+                    <input type="radio" name="indexed-mode" id="indexed-mode-random" value="random" checked />
+                    <span class="mode-label">
+                      <span class="mode-icon">🎲</span>
+                      Auto-Random
+                    </span>
+                  </label>
+                  <label class="mode-option">
+                    <input type="radio" name="indexed-mode" id="indexed-mode-manual" value="manual" />
+                    <span class="mode-label">
+                      <span class="mode-icon">✏️</span>
+                      Manual Entry
+                    </span>
+                  </label>
+                </div>
+
+                <div class="panel-body">
+                  <button id="indexed-randomize-btn" class="btn btn-ghost btn-sm">
+                    <span>🎲</span> Randomize Blocks
+                  </button>
+
+                  <div id="indexed-manual-section" style="display:none;">
+                    <div class="input-group" style="margin-bottom:1rem;">
+                      <label class="input-label">Index Block Number</label>
+                      <input type="number" id="indexed-index-block" class="input-field" placeholder="e.g., 5" min="0" />
+                      <p class="field-help">The dedicated block that holds pointers to all data blocks.</p>
+                    </div>
+                    <div class="input-group">
+                      <label class="input-label">Data Block Numbers <span class="input-hint">(comma or space separated)</span></label>
+                      <input type="text" id="indexed-data-input" class="input-field" placeholder="e.g., 2, 9, 14, 6" />
+                      <p class="field-help">Enter exactly <strong id="indexed-count-hint">N</strong> data block numbers matching your file size.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="button-group" style="margin-top:1.5rem;">
+                <button id="simulate-btn" class="btn btn-primary">Run Simulation</button>
+                <button id="clear-btn" class="btn btn-secondary">Clear</button>
+              </div>
+            </div>
+
+            <!-- Method Description -->
+            <div class="description-section">
+              <h2 class="section-title">Method Information</h2>
+              <div id="method-description" class="method-description"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="config-section">
+          <div class="sec-hdr">
+            <span class="sec-title">Results</span>
+            <div class="sec-line"></div>
+          </div>
+
+          <section class="content-section">
+            <!-- Disk Visualization -->
+            <div class="visualization-section">
+              <h2 class="section-title">Disk Block Visualization</h2>
+              <div class="disk-legend">
+                <span class="legend-item"><span class="legend-dot free-dot"></span> Free</span>
+                <span class="legend-item"><span class="legend-dot alloc-dot"></span> Allocated</span>
+                <span class="legend-item"><span class="legend-dot index-dot"></span> Index Block</span>
+              </div>
+              <div class="disk-container">
+                <div id="disk-blocks" class="disk-blocks"></div>
+              </div>
+            </div>
+
+            <!-- Allocation Information -->
+            <div class="info-section">
+              <h2 class="section-title">Allocation Details</h2>
+              <div id="allocation-info" class="allocation-info"></div>
+            </div>
+
+            <!-- Allocation Output -->
+            <div class="output-section">
+              <h2 class="section-title">Allocation Output</h2>
+              <div id="output-container" class="output-container">
+                <div id="allocation-output" class="allocation-output"></div>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <div class="fbrand"><span>OS_</span>EMULATOR</div>
+        <div class="fcopy">© 2026 S2 · Team 13 · File Allocation</div>
+      </div>
+      <div class="flinks">
+        <a href="../index.html">← Home</a>
+        <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank">Github</a>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

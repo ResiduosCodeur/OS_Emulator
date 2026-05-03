@@ -49,6 +49,17 @@ body{font-family:var(--font-mono);background:#101219;color:var(--blue-100);min-h
   content:'';position:absolute;bottom:0;left:0;right:0;height:90px;
   background:linear-gradient(to bottom,transparent,#101219);z-index:3;pointer-events:none;
 }
+.pr-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, #101219, transparent);
+  z-index: 3;
+  pointer-events: none;
+}
 .hero-grid{
   position:absolute;inset:0;z-index:1;pointer-events:none;
   background-image:linear-gradient(rgba(24,95,165,.10) 1px,transparent 1px),

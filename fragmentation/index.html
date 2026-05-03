@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory Fragmentation · OS Emulator</title>
+    <meta name="description" content="Interactive animated simulation of Internal and External Memory Fragmentation." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav class="topbar">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <a href="../index.html" class="brand-name">OS EMULATOR</a>
+      </div>
+      <span class="nav-module-label">/ Memory Fragmentation</span>
+      <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank" rel="noopener" class="boot-btn">Code</a>
+    </nav>
+
+    <main class="page">
+      <!-- Hero -->
+      <section class="pr-hero">
+        <div class="hero-grid"></div>
+        <div class="pr-hero-content">
+          <div class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            <span>MODULE 3 · Memory Fragmentation</span>
+          </div>
+          <h1 class="pr-hero-title">
+            <span class="accent">MEMORY</span> FRAGMENTATION
+          </h1>
+          <p class="pr-hero-desc">
+            Simulate Internal · External Fragmentation with First Fit · Best Fit · Worst Fit · Next Fit
+          </p>
+        </div>
+        <div class="corner-lbl corner-tl">MEM_MGR</div>
+        <div class="corner-lbl corner-tr">FRAG_SIM:ON</div>
+        <div class="corner-lbl corner-bl">INT_EXT</div>
+        <div class="corner-lbl corner-br">READY</div>
+      </section>
+
+      <!-- ── Config Panel ── -->
+      <section class="config-section">
+        <div class="sec-hdr">
+          <span class="sec-title">Configuration</span>
+          <div class="sec-line"></div>
+        </div>
+
+        <section class="content-section">
+          <div class="config-grid">
+            <!-- Input Controls -->
+            <div class="control-panel">
+              <h2 class="section-title">Memory Configuration</h2>
+
+              <div class="input-grid">
+                <!-- Memory Model -->
+                <div class="input-group">
+                  <label for="mem-model" class="input-label">Memory Model</label>
+                  <select id="mem-model" class="input-field">
+                    <option value="variable">Variable-sized Partitions</option>
+                    <option value="fixed">Fixed-size Partitions</option>
+                  </select>
+                </div>
+
+                <!-- Total Memory -->
+                <div class="input-group">
+                  <label for="total-memory" class="input-label">Total Memory (KB)</label>
+                  <input type="number" id="total-memory" class="input-field" value="100" min="16" max="256" />
+                </div>
+
+                <!-- Partition/Frame Size -->
+                <div class="input-group" id="partition-size-group">
+                  <label for="partition-size" class="input-label">Partition Size (KB)</label>
+                  <input type="number" id="partition-size" class="input-field" value="16" min="4" max="64" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Algorithm Selection -->
+            <div class="control-panel">
+              <h2 class="section-title">Allocation Algorithm</h2>
+
+              <div class="algo-grid">
+                <label class="algo-option">
+                  <input type="radio" name="algo" id="algo-first" value="first" checked />
+                  <span class="algo-card">
+                    <span class="algo-icon">⚡</span>
+                    <span class="algo-name">First Fit</span>
+                    <span class="algo-desc">Allocate to first sufficient block</span>
+                  </span>
+                </label>
+                <label class="algo-option">
+                  <input type="radio" name="algo" id="algo-best" value="best" />
+                  <span class="algo-card">
+                    <span class="algo-icon">🎯</span>
+                    <span class="algo-name">Best Fit</span>
+                    <span class="algo-desc">Allocate to smallest sufficient block</span>
+                  </span>
+                </label>
+                <label class="algo-option">
+                  <input type="radio" name="algo" id="algo-worst" value="worst" />
+                  <span class="algo-card">
+                    <span class="algo-icon">🔳</span>
+                    <span class="algo-name">Worst Fit</span>
+                    <span class="algo-desc">Allocate to largest block</span>
+                  </span>
+                </label>
+                <label class="algo-option">
+                  <input type="radio" name="algo" id="algo-next" value="next" />
+                  <span class="algo-card">
+                    <span class="algo-icon">⏭</span>
+                    <span class="algo-name">Next Fit</span>
+                    <span class="algo-desc">Allocate to next available block</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Process Input Panel ── -->
+        <section class="content-section">
+          <div class="sec-hdr">
+            <span class="sec-title">Process Management</span>
+            <div class="sec-line"></div>
+          </div>
+
+          <div class="process-controls">
+            <div class="input-row">
+              <div class="input-group">
+                <label for="process-name" class="input-label">Process Name</label>
+                <input type="text" id="process-name" class="input-field" value="P1" placeholder="e.g., P1" />
+              </div>
+              <div class="input-group">
+                <label for="process-size" class="input-label">Size (KB)</label>
+                <input type="number" id="process-size" class="input-field" value="20" min="1" max="100" />
+              </div>
+              <div class="input-group">
+                <label class="input-label">&nbsp;</label>
+                <button id="allocate-btn" class="btn btn-primary">
+                  <span>➕</span> Allocate Process
+                </button>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <div class="input-group">
+                <label for="process-select" class="input-label">Select Process to Deallocate</label>
+                <select id="process-select" class="input-field">
+                  <option value="">-- Select Process --</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label class="input-label">&nbsp;</label>
+                <button id="deallocate-btn" class="btn btn-danger">
+                  <span>🗑</span> Deallocate
+                </button>
+              </div>
+              <div class="input-group">
+                <label class="input-label">&nbsp;</label>
+                <button id="clear-btn" class="btn btn-ghost">
+                  <span>⚠</span> Clear All
+                </button>
+              </div>
+            </div>
+
+            <div class="quick-actions">
+              <span class="quick-label">Quick Add:</span>
+              <button id="add-random-btn" class="btn btn-sm btn-ghost">
+                <span>🎲</span> Random Process
+              </button>
+              <button id="add-batch-btn" class="btn btn-sm btn-ghost">
+                <span>📚</span> Add Batch (3 Processes)
+              </button>
+              <button id="compact-btn" class="btn btn-sm btn-warning">
+                <span>🔧</span> Compaction
+              </button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ── Visualization Panel ── -->
+      <section class="visual-section">
+        <div class="sec-hdr">
+          <span class="sec-title">Memory Visualization</span>
+          <div class="sec-line"></div>
+        </div>
+
+        <div class="viz-grid">
+          <!-- Memory Blocks Display -->
+          <div class="viz-panel memory-panel">
+            <div class="panel-header">
+              <span class="panel-title">Memory Map</span>
+              <div class="panel-stats">
+                <span class="stat-item">
+                  <span class="stat-label">Used:</span>
+                  <span class="stat-value" id="stat-used">0 KB</span>
+                </span>
+                <span class="stat-item">
+                  <span class="stat-label">Free:</span>
+                  <span class="stat-value" id="stat-free">100 KB</span>
+                </span>
+                <span class="stat-item">
+                  <span class="stat-label">Internal:</span>
+                  <span class="stat-value" id="stat-internal">0 KB</span>
+                </span>
+                <span class="stat-item">
+                  <span class="stat-label">External:</span>
+                  <span class="stat-value" id="stat-external">0 KB</span>
+                </span>
+              </div>
+            </div>
+            <div class="memory-blocks" id="memory-blocks">
+              <!-- Memory blocks will be rendered here -->
+            </div>
+            <div class="memory-legend">
+              <span class="legend-item"><span class="legend-color used"></span> Allocated</span>
+              <span class="legend-item"><span class="legend-color free"></span> Free</span>
+              <span class="legend-item"><span class="legend-color internal"></span> Internal Frag</span>
+              <span class="legend-item"><span class="legend-color external"></span> External Frag</span>
+            </div>
+          </div>
+
+          <!-- Process List -->
+          <div class="viz-panel process-panel">
+            <div class="panel-header">
+              <span class="panel-title">Allocated Processes</span>
+              <span class="panel-count" id="process-count">0</span>
+            </div>
+            <div class="process-list" id="process-list">
+              <!-- Process cards will be rendered here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Statistics Panel ── -->
+      <section class="stats-section">
+        <div class="sec-hdr">
+          <span class="sec-title">Fragmentation Analysis</span>
+          <div class="sec-line"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-icon">📊</span>
+              <span class="stat-card-title">Memory Utilization</span>
+            </div>
+            <div class="stat-card-value" id="utilization-percent">0%</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" id="utilization-bar" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-icon">🔲</span>
+              <span class="stat-card-title">Internal Fragmentation</span>
+            </div>
+            <div class="stat-card-value" id="internal-frag-value">0 KB</div>
+            <div class="stat-card-sub">Wasted within allocated blocks</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-icon">🧩</span>
+              <span class="stat-card-title">External Fragmentation</span>
+            </div>
+            <div class="stat-card-value" id="external-frag-value">0 KB</div>
+            <div class="stat-card-sub">Total free memory in small blocks</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-icon">⚡</span>
+              <span class="stat-card-title">Algorithm</span>
+            </div>
+            <div class="stat-card-value" id="current-algo">First Fit</div>
+            <div class="stat-card-sub" id="algo-stats">Searches: 0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Log Panel ── -->
+      <section class="log-section">
+        <div class="sec-hdr">
+          <span class="sec-title">System Log</span>
+          <div class="sec-line"></div>
+        </div>
+        <div class="log-container" id="log-container">
+          <!-- Log entries will be added here -->
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

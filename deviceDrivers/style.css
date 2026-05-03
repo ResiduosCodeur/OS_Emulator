@@ -1,0 +1,169 @@
+:root {
+  --blue: #185fa5; --blue-light: #e6f1fb; --blue-mid: #4a9de8; --blue-xdark: #040f1f;
+  --teal: #38bea0; --orange: #e88c3c; --green: #3cc878; --pink: #e85078;
+  --font-mono: "JetBrains Mono", monospace; --font-head: "Syne", sans-serif;
+  --r-lg: 16px; --r-md: 12px;
+}
+
+body { font-family: var(--font-mono); background: #101219; color: var(--blue-light); margin: 0; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 2rem; background: rgba(2, 10, 20, 0.9); border-bottom: 1px solid rgba(24, 95, 165, 0.2); }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue-mid); box-shadow: 0 0 8px var(--blue-mid); }
+.brand-name { font-family: var(--font-head); color: white; text-decoration: none; font-weight: 700; }
+
+.pr-hero { position: relative; height: 200px; background: #020a14; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(24, 95, 165, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(24, 95, 165, 0.1) 1px, transparent 1px); background-size: 40px 40px; }
+.pr-hero-title { font-family: 'Orbitron'; font-size: 40px; z-index: 1; }
+.accent { color: var(--blue-mid); }
+
+.page { padding: 2rem; display: flex; flex-direction: column; gap: 20px; }
+.layout-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.boot-section, .config-section { background: rgba(5, 14, 29, 0.6); border: 1px solid rgba(24, 95, 165, 0.2); border-radius: var(--r-lg); padding: 20px; }
+
+.btn { padding: 10px 20px; border-radius: 4px; cursor: pointer; border: none; font-family: var(--font-mono); font-weight: 600; }
+.btn-primary { background: var(--blue-mid); color: black; }
+.btn-secondary { background: transparent; border: 1px solid var(--blue-mid); color: var(--blue-mid); }
+.btn-pause { background: transparent; border: 1px solid var(--pink); color: var(--pink); }
+
+.memory-container { background: #020a14; padding: 10px; border-radius: 8px; min-height: 100px; display: flex; flex-direction: column; gap: 5px; }
+.memory-block { padding: 8px; background: rgba(74, 157, 232, 0.1); border: 1px solid rgba(74, 157, 232, 0.2); border-radius: 4px; display: flex; justify-content: space-between; font-size: 12px; }
+.ram-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ram-block { padding: 15px; border: 1px solid rgba(74, 157, 232, 0.2); text-align: center; border-radius: 4px; font-size: 11px; }
+
+.system-log { color: #a5b4fc; font-size: 11px; }
+.log-entry { margin-bottom: 4px; }
+.success { color: var(--green); }
+.warning { color: var(--orange); }
+
+.corner-lbl { position: absolute; font-size: 10px; color: var(--blue-mid); padding: 10px; }
+.corner-tl { top: 0; left: 0; } .corner-br { bottom: 0; right: 0; }
+
+/* ADD TO END OF STYLE.CSS */
+.theory-content li {
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 3px solid var(--blue-mid);
+}
+
+.flowchart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.flow-step {
+  width: 80%;
+  border-radius: 4px;
+  font-family: 'Orbitron';
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: transform 0.3s ease;
+}
+
+.flow-step:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 10px rgba(74, 157, 232, 0.2);
+}
+
+/* THEME-SUITABLE FLOWCHART CSS */
+.step-card {
+  display: flex;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(74, 157, 232, 0.1);
+  margin-bottom: 15px;
+}
+.step-num {
+  font-family: 'Orbitron';
+  color: var(--teal);
+  font-size: 18px;
+  font-weight: 900;
+  opacity: 0.5;
+}
+.flowchart-viz {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: rgba(2, 10, 20, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(74, 157, 232, 0.1);
+}
+.flow-node {
+  width: 100%;
+  padding: 15px;
+  text-align: center;
+  border: 1px solid rgba(74, 157, 232, 0.3);
+  border-radius: 4px;
+  font-family: 'Orbitron';
+  font-size: 11px;
+  color: var(--blue-light);
+  transition: all 0.4s ease;
+}
+.flow-arrow {
+  color: var(--blue-mid);
+  margin: 8px 0;
+  font-size: 12px;
+  opacity: 0.5;
+}
+/* THE GLOW EFFECT */
+.glow-active {
+  background: rgba(74, 157, 232, 0.2) !important;
+  border-color: var(--blue-mid) !important;
+  box-shadow: 0 0 20px rgba(74, 157, 232, 0.4);
+  color: white !important;
+  transform: scale(1.05);
+}
+
+/* ─── Footer Styles (Friend's Implementation) ─── */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 2rem;
+  background: var(--blue-xdark); /* Darkest background (#040f1f) */
+  border-top: 1px solid rgba(24, 95, 165, 0.3); /* The blue horizontal line */
+  margin-top: auto; /* Pushes footer to bottom if page is short */
+}
+
+.fbrand {
+  font-family: var(--font-head); /* Syne font */
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-200);
+}
+
+.fbrand span {
+  color: var(--blue-mid); /* The glowing blue "OS_" text */
+}
+
+.fcopy {
+  font-family: var(--font-mono); /* JetBrains Mono font */
+  font-size: 11px;
+  color: white;
+  margin-top: 3px;
+  letter-spacing: 0.06em;
+}
+
+.flinks {
+  display: flex;
+  gap: 16px;
+}
+
+.flinks a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 0.15s;
+}
+
+.flinks a:hover {
+  color: var(--blue-200); /* Lightens on hover */
+}

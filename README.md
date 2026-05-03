@@ -22,5 +22,5 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - **Deadlock**
 - **CPU Scheduling Algorithms**
 - **Internal and External Memory fragmentation**
-- **Continuos memory allocation**
 - **Page replacement**
+- **Boot Process Simulation**
