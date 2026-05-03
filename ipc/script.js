@@ -3,6 +3,7 @@ const S = {
   timer: null,
   steps: [],
   cursor: 0,
+  deadlock: false,
   mechanism: 'shared-memory',
   bufferSize: 6,
   producerCount: 2,
@@ -898,7 +899,7 @@ function finishSimulation() {
   clearTimers();
   S.status = 'done';
   setControls();
-  DOM.stats.deadlock.textContent = 'NO';
+  DOM.stats.deadlock.textContent = S.deadlock ? 'YES' : 'NO';
   renderComparison();
 }
 
@@ -906,8 +907,11 @@ function runSimulation(autoPlay = true) {
   clearTimers();
   S.steps = [];
   S.cursor = 0;
+  S.deadlock = false;
   S.status = autoPlay ? 'running' : 'paused';
-  S.steps = simulate({ ...currentParams(), mechanism: S.mechanism }).steps;
+  const simResult = simulate({ ...currentParams(), mechanism: S.mechanism });
+  S.steps = simResult.steps;
+  S.deadlock = simResult.deadlock;
   buildSkeleton();
   DOM.compareSection.style.display = 'none';
   refreshConfigLabels();
