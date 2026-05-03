@@ -366,7 +366,6 @@ function simulate(params) {
     mechanismAction(proc, itemId, 'produce');
     buffer[slot] = itemId;
     sem.inPointer = (sem.inPointer + 1) % params.bufferSize;
-    sem.full += 1;
     produced += 1;
     proc.produced += 1;
     proc.log.unshift(`produced item_${itemId}`);
@@ -414,7 +413,6 @@ function simulate(params) {
     mechanismAction(proc, itemId, 'consume');
     buffer[slot] = null;
     sem.outPointer = (sem.outPointer + 1) % params.bufferSize;
-    sem.empty += 1;
     consumed += 1;
     proc.consumed += 1;
     proc.log.unshift(`consumed item_${itemId}`);
