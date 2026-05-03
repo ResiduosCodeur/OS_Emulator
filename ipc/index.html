@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPC Simulator · OS Emulator</title>
+  <meta name="description" content="Interactive Producer-Consumer IPC simulation with bounded buffer, semaphores, and mutex synchronization."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <a href="../index.html" class="brand-name">OS EMULATOR</a>
+    </div>
+    <span class="nav-module-label">/ IPC Simulator</span>
+    <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank" rel="noopener noreferrer" class="boot-btn">Code</a>
+  </nav>
+
+  <main class="page">
+    <section class="pr-hero">
+      <div class="hero-grid"></div>
+      <div class="pr-hero-content">
+        <div class="hero-eyebrow"><span class="eyebrow-dot"></span><span>MODULE 11 · IPC SIMULATOR</span></div>
+        <h1 class="pr-hero-title"><span class="accent">IPC</span> SIMULATOR</h1>
+        <p class="pr-hero-desc">Producer-Consumer problem with bounded buffer, semaphores, and mutex synchronization</p>
+      </div>
+      <div class="corner-lbl corner-tl">PROC_0x1A</div>
+      <div class="corner-lbl corner-tr">IPC:ACTIVE</div>
+      <div class="corner-lbl corner-bl">SEM:READY</div>
+      <div class="corner-lbl corner-br">BUF:BOUNDED</div>
+    </section>
+
+    <section class="config-section">
+      <div class="sec-hdr">
+        <span class="sec-title">Configuration</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="config-grid">
+        <div class="config-card">
+          <div class="config-label">IPC MECHANISM</div>
+          <div class="mech-tabs" id="mech-tabs">
+            <button class="mech-tab active" data-mech="shared-memory">Shared Memory</button>
+            <button class="mech-tab" data-mech="message-queue">Message Queue</button>
+            <button class="mech-tab" data-mech="pipe">Pipe</button>
+          </div>
+          <div class="algo-desc-box">
+            <span class="algo-desc-text" id="mech-desc">Direct memory access shared between processes. Fastest IPC — zero kernel involvement per transfer.</span>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="config-label">PARAMETERS</div>
+          <div class="param-row">
+            <span class="param-label">Buffer Size</span>
+            <div class="stepper">
+              <button class="step-btn" id="buf-dec">−</button>
+              <span class="step-val" id="buf-val">6</span>
+              <button class="step-btn" id="buf-inc">+</button>
+            </div>
+          </div>
+          <div class="param-row spaced">
+            <span class="param-label">Producer Count</span>
+            <div class="stepper">
+              <button class="step-btn" id="prod-dec">−</button>
+              <span class="step-val" id="prod-val">2</span>
+              <button class="step-btn" id="prod-inc">+</button>
+            </div>
+          </div>
+          <div class="param-row spaced">
+            <span class="param-label">Consumer Count</span>
+            <div class="stepper">
+              <button class="step-btn" id="cons-dec">−</button>
+              <span class="step-val" id="cons-val">2</span>
+              <button class="step-btn" id="cons-inc">+</button>
+            </div>
+          </div>
+          <div class="param-row spaced">
+            <span class="param-label">Items to Produce</span>
+            <div class="stepper">
+              <button class="step-btn" id="items-dec">−</button>
+              <span class="step-val" id="items-val">12</span>
+              <button class="step-btn" id="items-inc">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-card config-card-speed">
+          <div class="config-label">PLAYBACK SPEED</div>
+          <div class="param-row">
+            <span class="param-label">Speed</span>
+            <span class="speed-label" id="speed-label">2×</span>
+          </div>
+          <input type="range" id="speed-slider" class="speed-slider" min="1" max="5" value="2" step="1"/>
+          <div class="btn-row">
+            <button class="run-btn" id="run-btn">▶ RUN</button>
+            <button class="ctrl-btn" id="pause-btn" disabled>⏸ PAUSE</button>
+            <button class="ctrl-btn" id="step-btn" disabled>⏭ STEP</button>
+            <button class="reset-btn" id="reset-btn">↺ RESET</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-chip"><span class="stat-chip-lbl">STEP</span><span class="stat-chip-val" id="stat-step">0</span></div>
+      <div class="stat-chip"><span class="stat-chip-lbl">PRODUCED</span><span class="stat-chip-val prod-val" id="stat-produced">0</span></div>
+      <div class="stat-chip"><span class="stat-chip-lbl">CONSUMED</span><span class="stat-chip-val cons-val" id="stat-consumed">0</span></div>
+      <div class="stat-chip"><span class="stat-chip-lbl">BLOCKED</span><span class="stat-chip-val block-val" id="stat-blocked">0</span></div>
+      <div class="stat-chip"><span class="stat-chip-lbl">DEADLOCK</span><span class="stat-chip-val" id="stat-deadlock">NO</span></div>
+    </div>
+
+    <section class="viz-section" id="viz-section">
+      <div class="sec-hdr">
+        <span class="sec-title">Simulation</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="viz-grid">
+        <div class="process-panel" id="process-panel">
+          <div class="panel-label">PROCESSES</div>
+          <div class="process-list" id="process-list"></div>
+        </div>
+
+        <div class="buffer-panel" id="buffer-panel">
+          <div class="panel-label">BUFFER</div>
+          <div class="buf-header" id="buf-header">BUFFER [in:0 out:0 size:6]</div>
+          <div class="buf-status-top" id="buf-status-top"></div>
+          <div class="buffer-stage" id="buffer-stage">
+            <div class="buffer-pointers">
+              <div class="buffer-pointer in-pointer" id="in-pointer">▶ IN</div>
+              <div class="buffer-pointer out-pointer" id="out-pointer">▶ OUT</div>
+            </div>
+            <div class="buffer-cells" id="buffer-cells"></div>
+          </div>
+          <div class="buf-status-bot" id="buf-status-bot"></div>
+        </div>
+
+        <div class="semaphore-panel" id="semaphore-panel">
+          <div class="panel-label">SEMAPHORES</div>
+          <div class="sem-list" id="sem-list"></div>
+        </div>
+      </div>
+
+      <div class="event-log-wrap">
+        <div class="panel-label">EVENT LOG</div>
+        <div class="event-log-header">
+          <span class="log-col log-step">STEP</span>
+          <span class="log-col log-time">TIME</span>
+          <span class="log-col log-proc">PROC</span>
+          <span class="log-col log-action">ACTION</span>
+          <span class="log-col log-result">RESULT</span>
+        </div>
+        <div class="event-log" id="event-log"></div>
+      </div>
+    </section>
+
+    <section class="compare-section" id="compare-section" style="display:none">
+      <div class="sec-hdr">
+        <span class="sec-title">IPC Mechanism Comparison</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="compare-grid" id="compare-grid"></div>
+    </section>
+
+    <section class="info-section">
+      <div class="sec-hdr">
+        <span class="sec-title">Reference</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="8" r="3"/><circle cx="12" cy="8" r="3"/><line x1="7" y1="8" x2="9" y2="8"/><polyline points="8,6 9,8 8,10"/></svg></div>
+            <span class="info-tag">PRODUCER-CONSUMER</span>
+          </div>
+          <div class="info-title">Producer-Consumer Problem</div>
+          <div class="info-body">A classic synchronization problem: producers create items and place them in a bounded buffer; consumers remove and use them. Semaphores prevent <span class="hl">race conditions</span> and buffer over/underflow.</div>
+          <pre class="pseudo-block">producer():
+  loop:
+    wait(empty)
+    wait(mutex)
+    buffer[in] = item
+    in = (in+1) % N
+    signal(mutex)
+    signal(full)</pre>
+          <pre class="pseudo-block">consumer():
+  loop:
+    wait(full)
+    wait(mutex)
+    item = buffer[out]
+    out = (out+1) % N
+    signal(mutex)
+    signal(empty)</pre>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="12" height="6" rx="1"/><line x1="5" y1="5" x2="5" y2="11"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="11" y1="5" x2="11" y2="11"/></svg></div>
+            <span class="info-tag">SEMAPHORES</span>
+          </div>
+          <div class="info-title">Semaphore Operations</div>
+          <div class="info-body"><span class="hl">wait(S)</span>: if S &gt; 0, decrement S; else block until S &gt; 0. <span class="hl">signal(S)</span>: increment S and wake one blocked process. Mutex is a binary semaphore ensuring mutual exclusion in the critical section.</div>
+          <div class="info-complexity"><span class="hl">mutex</span> protects the buffer, <span class="hl">empty</span> tracks free slots, and <span class="hl">full</span> tracks filled slots.</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-top">
+            <div class="info-ico"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h3l2 3-2 3H2V4z"/><path d="M14 4h-3l-2 3 2 3h3V4z"/><line x1="5" y1="7" x2="11" y2="7"/></svg></div>
+            <span class="info-tag">IPC MECHANISMS</span>
+          </div>
+          <div class="info-title">IPC Mechanisms</div>
+          <div class="info-body"><strong class="hl">Shared Memory</strong>: fastest, processes map the same memory region. <strong class="hl">Message Queues</strong>: kernel-buffered FIFO messages. <strong class="hl">Pipes</strong>: sequential byte streams with simple unidirectional flow.</div>
+          <div class="info-complexity"><span class="hl">Throughput:</span> Shared &gt; Message Queue &gt; Pipe</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <div class="fbrand"><span>OS_</span>EMULATOR</div>
+      <div class="fcopy">© 2026 S2 · Team 13 · IPC Module</div>
+    </div>
+    <div class="flinks">
+      <a href="../index.html">← Home</a>
+      <a href="https://github.com/ResiduosCodeur/OS_Emulator" target="_blank" rel="noopener noreferrer">Github</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
