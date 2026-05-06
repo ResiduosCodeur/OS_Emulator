@@ -26,7 +26,6 @@ body {
   background: radial-gradient(circle at top right, rgba(74, 157, 232, 0.08), transparent 25%), linear-gradient(180deg, #020a14 0%, #101219 100%);
   color: var(--blue-100);
   min-height: 100vh;
-  overflow: hidden;
 }
 
 .container {
