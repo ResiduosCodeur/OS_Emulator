@@ -29,3 +29,4 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - **Device Drivers**
 - **Inter Process Communication**
 - **Threads and Concurrency**
+- **UMA and NUMA**
