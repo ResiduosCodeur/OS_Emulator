@@ -3,6 +3,7 @@
 An OS Simulator project for the OS Lab course, implementing various core operating system concepts.
 
 ## Team Members
+
 - Sachin Rohra - 241CS251
 - Samarth Talawar - 241CS252
 - Rohit Sannapuri - 241CS253
@@ -14,6 +15,7 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - Srikarthik Sankarkumar - 241CS260
 
 ## Simulations
+
 - **System Calls**
 - **File Allocation**
 - **Simulation Of File System**
@@ -27,4 +29,3 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - **Inter Process Communication**
 - **Device Drivers**
 - **Threads and Concurrency**
-- **Address Binding**
