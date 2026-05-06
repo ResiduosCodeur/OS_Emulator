@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Address Binding — OS Visualization</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-page:       #101219;
+    --bg-hero:       #020a14;
+    --bg-card:       #050e1d;
+    --bg-badge:      #040f1f;
+    --blue-mid:      #4a9de8;
+    --blue-base:     #185FA5;
+    --blue-dark:     #0C447C;
+    --blue-200:      #8fbfe8;
+    --blue-100:      #c8dff5;
+    --blue-light:    #E6F1FB;
+    --text-white:    #ffffff;
+    --text-card:     rgba(255,255,255,0.9);
+    --text-cyan:     rgba(0,251,255,0.7);
+    --text-muted:    rgba(143,191,232,0.7);
+    --border-card:   rgba(24,95,165,0.28);
+    --border-nav:    rgba(24,95,165,0.35);
+    --border-hover:  rgba(74,157,232,0.55);
+    --border-badge:  rgba(74,157,232,0.40);
+    --font-mono:     'JetBrains Mono', monospace;
+    --font-head:     'Syne', sans-serif;
+    --font-title:    'Orbitron', sans-serif;
+    --col-compile:   #4a9de8;
+    --col-link:      #38bea0;
+    --col-load:      #b464e8;
+    --col-runtime:   #e88c3c;
+    --col-highlight: #e8c83c;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-page);
+    color: var(--text-card);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--bg-hero);
+    border-bottom: 1px solid var(--border-nav);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(74,157,232,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--text-cyan);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero-title {
+    font-family: var(--font-title);
+    font-size: clamp(28px, 5vw, 56px);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .hero-title span { color: var(--blue-mid); }
+  .hero-sub {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--blue-100);
+    margin-bottom: 20px;
+  }
+  .hero-desc {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    max-width: 700px;
+  }
+
+  /* ── NAV / BINDING SELECTOR ── */
+  .selector-bar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-nav);
+    padding: 20px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .selector-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .selector-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--text-cyan);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .binding-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tab-btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 8px 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border-card);
+    background: var(--bg-badge);
+    color: var(--blue-200);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .tab-btn:hover { border-color: var(--border-hover); color: var(--blue-light); }
+  .tab-btn.active[data-type="compile"]  { background: rgba(74,157,232,0.15);  border-color: #4a9de8;  color: #4a9de8; }
+  .tab-btn.active[data-type="load"]    { background: rgba(56,190,160,0.15);  border-color: #38bea0;  color: #38bea0; }
+  .tab-btn.active[data-type="runtime"] { background: rgba(232,140,60,0.15);  border-color: #e88c3c;  color: #e88c3c; }
+
+  .controls-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ctrl-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border-badge);
+    background: transparent;
+    color: var(--blue-200);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ctrl-btn:hover { border-color: var(--blue-mid); color: var(--blue-light); }
+  .ctrl-btn.primary {
+    background: rgba(74,157,232,0.18);
+    border-color: var(--blue-mid);
+    color: var(--blue-light);
+  }
+  .ctrl-btn .icon { font-size: 14px; line-height: 1; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 40px 40px 80px; }
+
+  /* ── THEORY BOX ── */
+  .theory-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .theory-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-color, var(--blue-mid));
+  }
+  .theory-box h2 {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--blue-light);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .theory-box h2 .badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+  .theory-box p {
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--text-muted);
+  }
+  .theory-box p + p { margin-top: 10px; }
+  .theory-box strong { color: var(--blue-100); font-weight: 600; }
+
+  /* ── PIPELINE OVERVIEW ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 40px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .pipe-step {
+    flex: 1;
+    min-width: 130px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 6px;
+    padding: 14px 16px;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .pipe-step:hover { border-color: var(--border-hover); }
+  .pipe-step.active { border-color: var(--step-color); background: rgba(255,255,255,0.03); }
+  .pipe-step.active .pipe-num { color: var(--step-color); }
+  .pipe-step.active .pipe-name { color: var(--text-white); }
+  .pipe-step.done { opacity: 0.6; }
+  .pipe-step.done .pipe-num::after { content: ' ✓'; }
+  .pipe-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .pipe-name {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--blue-200);
+  }
+  .pipe-arrow {
+    flex-shrink: 0;
+    width: 36px;
+    text-align: center;
+    color: var(--blue-dark);
+    font-size: 18px;
+    margin: 0 -1px;
+    z-index: 1;
+  }
+
+  /* ── STAGE PANEL ── */
+  .stage-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .stage-panel.active-panel { border-color: var(--step-color, var(--blue-mid)); }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border-card);
+  }
+  .panel-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--step-color, var(--blue-mid));
+    box-shadow: 0 0 8px var(--step-color, var(--blue-mid));
+    flex-shrink: 0;
+  }
+  .panel-dot.dim { background: var(--blue-dark); box-shadow: none; }
+  .panel-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--blue-light);
+    flex: 1;
+  }
+  .panel-stage-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border-badge);
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .panel-stage-tag.active-tag {
+    border-color: var(--step-color, var(--blue-mid));
+    color: var(--step-color, var(--blue-mid));
+  }
+
+  /* ── CODE DISPLAY ── */
+  .code-wrap {
+    padding: 20px;
+    overflow-x: auto;
+    min-height: 140px;
+  }
+  .code-block {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.9;
+    white-space: pre;
+    position: relative;
+  }
+
+  /* address token coloring */
+  .addr-sym   { color: #e8c83c; font-weight: 600; }          /* symbolic name */
+  .addr-rel   { color: #38bea0; font-weight: 600; }          /* relocatable offset */
+  .addr-abs   { color: #4a9de8; font-weight: 700; }          /* absolute addr */
+  .addr-virt  { color: #b464e8; font-weight: 700; }          /* virtual/logical */
+  .addr-phys  { color: #e88c3c; font-weight: 700; }          /* physical */
+  .kw         { color: #4a9de8; }
+  .type-kw    { color: #8fbfe8; }
+  .str        { color: #38bea0; }
+  .num        { color: #e88c3c; }
+  .comment    { color: rgba(143,191,232,0.45); font-style: italic; }
+  .fn-name    { color: #c8dff5; }
+  .punct      { color: rgba(255,255,255,0.4); }
+  .normal     { color: rgba(255,255,255,0.85); }
+
+  /* morph animation */
+  @keyframes morphIn {
+    0%   { background: rgba(232,200,60,0.35); border-radius: 3px; }
+    60%  { background: rgba(232,200,60,0.18); }
+    100% { background: transparent; }
+  }
+  .morphed { animation: morphIn 1.2s ease forwards; }
+
+  @keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 6px currentColor; }
+    50%       { text-shadow: 0 0 16px currentColor, 0 0 32px currentColor; }
+  }
+  .pulsing { animation: pulse-glow 1s ease-in-out infinite; }
+
+  /* ── ANNOTATION STRIP ── */
+  .annotation {
+    padding: 14px 20px;
+    background: rgba(0,0,0,0.25);
+    border-top: 1px solid var(--border-card);
+    font-size: 12px;
+    color: var(--text-cyan);
+    line-height: 1.6;
+    min-height: 44px;
+    transition: opacity 0.3s;
+  }
+  .annotation strong { color: var(--blue-100); }
+
+  /* ── MEMORY MAP DIAGRAM ── */
+  .mem-diagram {
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .mem-column { flex: 1; min-width: 160px; }
+  .mem-col-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .mem-block {
+    border: 1px solid var(--border-card);
+    border-radius: 4px;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .mem-seg {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(24,95,165,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.4s;
+  }
+  .mem-seg:last-child { border-bottom: none; }
+  .mem-seg-name { color: var(--blue-100); font-weight: 600; }
+  .mem-seg-addr { color: var(--blue-mid); font-size: 10px; }
+  .mem-seg.highlight-seg { background: rgba(74,157,232,0.15); }
+  .mem-seg.text-seg  { background: rgba(74,157,232,0.07); }
+  .mem-seg.data-seg  { background: rgba(56,190,160,0.07); }
+  .mem-seg.stack-seg { background: rgba(180,100,232,0.07); }
+  .mem-seg.heap-seg  { background: rgba(232,140,60,0.07); }
+
+  /* ── PAGE TABLE DIAGRAM ── */
+  .pt-diagram {
+    padding: 20px;
+  }
+  .pt-title {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--blue-100);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .pt-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .pt-box {
+    background: var(--bg-badge);
+    border: 1px solid var(--border-card);
+    border-radius: 6px;
+    padding: 12px 16px;
+    text-align: center;
+    min-width: 130px;
+  }
+  .pt-box-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .pt-box-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .pt-arrow {
+    width: 48px;
+    text-align: center;
+    color: var(--blue-dark);
+    font-size: 20px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .pt-arrow-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .pt-table-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .pt-table {
+    background: var(--bg-badge);
+    border: 1px solid var(--border-card);
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    min-width: 160px;
+  }
+  .pt-table-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    background: rgba(24,95,165,0.3);
+    padding: 6px 12px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .pt-table-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 5px 12px;
+    border-top: 1px solid rgba(24,95,165,0.15);
+    transition: background 0.4s;
+  }
+  .pt-table-row.active-row { background: rgba(232,140,60,0.15); }
+  .pt-cell { }
+  .pt-cell.virt { color: var(--addr-virt, #b464e8); }
+  .pt-cell.frame { color: var(--addr-phys, #e88c3c); }
+  .pt-cell.valid { color: var(--col-link); }
+
+  /* ── PROGRESS / PLAYBACK ── */
+  .playback-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    margin-bottom: 16px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 3px;
+    background: rgba(24,95,165,0.3);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--blue-mid);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 8px var(--blue-mid);
+  }
+  .step-counter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .speed-select {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--bg-badge);
+    border: 1px solid var(--border-badge);
+    color: var(--blue-200);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 14px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    margin-bottom: 32px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .legend-swatch {
+    width: 28px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── STEP EXPLANATION CARD ── */
+  .step-explain {
+    background: rgba(4,15,31,0.7);
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-top: 16px;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text-muted);
+  }
+  .step-explain h3 {
+    font-family: var(--font-head);
+    font-size: 15px;
+    color: var(--blue-100);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-explain h3 .step-icon { font-size: 18px; }
+  .step-explain ul { list-style: none; padding: 0; }
+  .step-explain ul li {
+    padding: 3px 0 3px 16px;
+    position: relative;
+  }
+  .step-explain ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--blue-mid);
+  }
+  .step-explain strong { color: var(--blue-100); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-card); }
+  ::-webkit-scrollbar-thumb { background: var(--blue-dark); border-radius: 3px; }
+
+  /* ── FADE IN ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.4s ease both; }
+
+  .hidden { display: none !important; }
+
+  /* ── SCANLINE TEXTURE ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Operating Systems · Memory Management</div>
+    <div class="hero-title">ADDRESS <span>BINDING</span></div>
+    <div class="hero-sub">From Source Code to Physical Memory</div>
+    <div class="hero-desc">
+      Address binding is the process of mapping a program's symbolic names and logical addresses to actual physical memory locations.
+      It can occur at <strong style="color:var(--col-compile)">compile time</strong>,
+      <strong style="color:var(--col-link)">load time</strong>, or
+      <strong style="color:var(--col-runtime)">run time</strong>.
+      Select a binding type below to trace a sample C program through each stage of the toolchain.
+    </div>
+  </div>
+</div>
+
+<!-- STICKY SELECTOR + CONTROLS -->
+<div class="selector-bar">
+  <div class="selector-inner">
+    <span class="selector-label">Binding Type:</span>
+    <div class="binding-tabs">
+      <button class="tab-btn active" data-type="compile">Compile-Time</button>
+      <button class="tab-btn" data-type="load">Load-Time</button>
+      <button class="tab-btn" data-type="runtime">Run-Time</button>
+    </div>
+    <div class="controls-right">
+      <select class="speed-select" id="speedSelect">
+        <option value="2000">Speed: Slow</option>
+        <option value="1100" selected>Speed: Normal</option>
+        <option value="600">Speed: Fast</option>
+      </select>
+      <button class="ctrl-btn" id="prevBtn"><span class="icon">◀</span> Prev</button>
+      <button class="ctrl-btn" id="nextBtn">Next <span class="icon">▶</span></button>
+      <button class="ctrl-btn primary" id="playBtn"><span class="icon">▶</span> Autoplay</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PROGRESS BAR -->
+  <div class="playback-bar">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <span class="step-counter" id="stepCounter">Step 0 / 0</span>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:#e8c83c"></div>Symbolic Name (source)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#38bea0"></div>Relocatable Offset (object file)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4a9de8"></div>Absolute Address (fixed/compiled)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#b464e8"></div>Virtual / Logical Address</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#e88c3c"></div>Physical Address (RAM)</div>
+  </div>
+
+  <!-- THEORY BOX -->
+  <div class="theory-box" id="theoryBox">
+    <h2 id="theoryTitle">
+      Compile-Time Binding
+      <span class="badge" id="theoryBadge" style="border-color:#4a9de8;color:#4a9de8">Static</span>
+    </h2>
+    <p id="theoryText1"></p>
+    <p id="theoryText2"></p>
+  </div>
+
+  <!-- PIPELINE STEPS -->
+  <div class="pipeline" id="pipeline"></div>
+
+  <!-- STAGE PANELS — injected by JS -->
+  <div id="stagePanels"></div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  DATA MODEL
+// ─────────────────────────────────────────────────────────────
+
+const THEORY = {
+  compile: {
+    title: "Compile-Time Binding",
+    badge: "Static",
+    badgeColor: "#4a9de8",
+    accentColor: "#4a9de8",
+    p1: `If the memory location is known at compile time, the compiler generates <strong>absolute addresses</strong> directly into the machine code. The program <em>must always be loaded at the same memory address</em> — the one the compiler assumed. If that address is occupied, the program cannot run.`,
+    p2: `This was common in early batch-processing systems (MS-DOS .COM files). It is simple and fast but inflexible — no relocation is possible at load time. The <strong>linker</strong> still resolves cross-file symbols, but all final addresses are already locked in by the assembler/compiler.`
+  },
+  load: {
+    title: "Load-Time Binding",
+    badge: "Relocatable",
+    badgeColor: "#38bea0",
+    accentColor: "#38bea0",
+    p1: `If it is not known at compile time where the program will reside in memory, the compiler generates <strong>relocatable code</strong> — all addresses are expressed as offsets from a base (typically 0). The <strong>loader</strong> then adds the actual base address to every reference when the program is brought into memory.`,
+    p2: `The binding is fixed once loading is complete. The program can be placed anywhere in physical memory, but <strong>cannot be moved after loading has begun</strong>. The OS decides the base address at load time; every address reference is then patched by adding this base. This is similar to how early Unix used base-register relocation.`
+  },
+  runtime: {
+    title: "Run-Time (Dynamic) Binding",
+    badge: "Dynamic",
+    badgeColor: "#e88c3c",
+    accentColor: "#e88c3c",
+    p1: `Binding is <strong>deferred until actual execution</strong>. The CPU uses a <em>Memory Management Unit (MMU)</em> to translate logical (virtual) addresses to physical addresses on every single memory access. The program always works with logical addresses; it never sees physical RAM directly.`,
+    p2: `This enables <strong>process swapping, paging, and virtual memory</strong>. The OS can move the process in physical memory at any time simply by updating the page table — without touching the program's code or data at all. Modern operating systems (Linux, Windows, macOS) exclusively use run-time binding via paging.`
+  }
+};
+
+// ── SAMPLE PROGRAM (shared across all binding types) ─────────
+// We annotate tokens; addr-sym = symbolic, addr-rel = relocatable,
+// addr-abs = absolute, addr-virt = virtual, addr-phys = physical
+
+const SOURCE_CODE = `<span class="comment">/* sum.c — sample program for address binding demo */</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="type-kw">int</span> <span class="addr-sym" data-name="data">data</span>[<span class="num">4</span>] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>};
+<span class="type-kw">int</span> <span class="addr-sym" data-name="result">result</span>;
+
+<span class="type-kw">int</span> <span class="addr-sym" data-name="sum">sum</span>(<span class="type-kw">int</span> <span class="normal">*arr</span>, <span class="type-kw">int</span> <span class="normal">n</span>) {
+    <span class="type-kw">int</span> <span class="normal">i</span>, <span class="normal">total</span> = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="normal">i</span> = <span class="num">0</span>; <span class="normal">i</span> &lt; <span class="normal">n</span>; <span class="normal">i</span>++)
+        <span class="normal">total</span> += <span class="normal">arr</span>[<span class="normal">i</span>];
+    <span class="kw">return</span> <span class="normal">total</span>;
+}
+
+<span class="type-kw">int</span> <span class="addr-sym" data-name="main">main</span>() {
+    <span class="addr-sym" data-name="result">result</span> = <span class="addr-sym" data-name="sum">sum</span>(<span class="addr-sym" data-name="data">data</span>, <span class="num">4</span>);
+    <span class="normal">printf</span>(<span class="str">"%d\\n"</span>, <span class="addr-sym" data-name="result">result</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}`;
+
+// ── STAGES per binding type ───────────────────────────────────
+// Each stage has: id, name, color, code (HTML string), annotation, memMap?, pageTable?
+
+const STAGES = {
+
+  // ═══════════════════════════════════════════════════════════
+  compile: [
+    {
+      id: 'source',
+      name: 'Source Code',
+      stageLabel: 'sum.c',
+      color: '#8fbfe8',
+      annotation: '<strong>Source Code (sum.c)</strong> — All identifiers (<span class="addr-sym">data</span>, <span class="addr-sym">result</span>, <span class="addr-sym">sum</span>, <span class="addr-sym">main</span>) are purely <span class="addr-sym">symbolic names</span>. The compiler has not yet assigned any addresses. The linker and loader do not exist yet at this stage.',
+      code: SOURCE_CODE,
+      explain: {
+        title: '① Source Code',
+        icon: '📄',
+        points: [
+          'All names (data, result, sum, main) are <strong>symbolic identifiers</strong> — they exist only as text.',
+          'No memory addresses exist yet. The compiler\'s job is to translate this into machine code.',
+          'The preprocessor will first expand #include and any macros.',
+          'Compile-time binding means: the compiler itself will choose the final absolute addresses.'
+        ]
+      }
+    },
+    {
+      id: 'compile',
+      name: 'Compilation',
+      stageLabel: 'sum.o (partial)',
+      color: '#4a9de8',
+      annotation: '<strong>Compilation → Object File (sum.o)</strong> — The compiler assigns <span class="addr-rel">relocatable offsets from 0</span> to each symbol. For <em>compile-time binding</em>, the compiler additionally resolves these to <span class="addr-abs">absolute addresses</span> using a known base (e.g. <code>0x10000</code>). All references are patched in the object file itself.',
+      morphTargets: ['data', 'result', 'sum', 'main'],
+      code: `<span class="comment">; sum.o — object code (compile-time: absolute addrs already embedded)</span>
+<span class="comment">; Compiler assumed load address = 0x10000</span>
+
+<span class="comment">; .data section at absolute 0x10000</span>
+<span class="addr-abs" data-name="data">0x10000</span>:  <span class="normal">data</span>    <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>       <span class="comment">; int data[4]</span>
+<span class="addr-abs" data-name="result">0x10010</span>:  <span class="normal">result</span>  <span class="num">0</span>                  <span class="comment">; int result (BSS)</span>
+
+<span class="comment">; .text section — sum() at absolute 0x10020</span>
+<span class="addr-abs" data-name="sum">0x10020</span>:  <span class="normal">PUSH</span>  <span class="normal">BP</span>
+<span class="normal">          MOV</span>   <span class="normal">BP</span>, <span class="normal">SP</span>
+<span class="normal">          XOR</span>   <span class="normal">AX</span>, <span class="normal">AX</span>              <span class="comment">; total = 0</span>
+<span class="normal">          MOV</span>   <span class="normal">CX</span>, [<span class="normal">BP+8</span>]          <span class="comment">; n</span>
+<span class="normal">          MOV</span>   <span class="normal">SI</span>, [<span class="normal">BP+4</span>]          <span class="comment">; arr pointer</span>
+<span class="normal">.loop:    ADD</span>   <span class="normal">AX</span>, [<span class="normal">SI</span>]
+<span class="normal">          ADD</span>   <span class="normal">SI</span>, <span class="num">4</span>
+<span class="normal">          LOOP</span>  <span class="normal">.loop</span>
+<span class="normal">          POP</span>   <span class="normal">BP</span>
+<span class="normal">          RET</span>
+
+<span class="comment">; main() at absolute 0x10060</span>
+<span class="addr-abs" data-name="main">0x10060</span>:  <span class="normal">PUSH</span>  <span class="num">4</span>                   <span class="comment">; n=4</span>
+<span class="normal">          PUSH</span>  <span class="addr-abs">0x10000</span>             <span class="comment">; &amp;data — absolute addr</span>
+<span class="normal">          CALL</span>  <span class="addr-abs">0x10020</span>             <span class="comment">; call sum() — absolute addr</span>
+<span class="normal">          MOV</span>   [<span class="addr-abs">0x10010</span>], <span class="normal">AX</span>      <span class="comment">; result = retval — absolute addr</span>
+<span class="normal">          PUSH</span>  <span class="addr-abs">0x10010</span>             <span class="comment">; &amp;result — absolute addr</span>
+<span class="normal">          CALL</span>  <span class="addr-abs">printf_addr</span>
+<span class="normal">          XOR</span>   <span class="normal">AX</span>, <span class="normal">AX</span>
+<span class="normal">          RET</span>`,
+      explain: {
+        title: '② Compilation → Object File',
+        icon: '⚙️',
+        points: [
+          'The compiler translates C source into assembly/machine code.',
+          'For <strong>compile-time binding</strong>, the compiler assumes a fixed load address (here <strong>0x10000</strong>).',
+          'All symbolic names (<span class="addr-sym">data</span>, <span class="addr-sym">sum</span>, <span class="addr-sym">main</span>) are replaced with <span class="addr-abs">absolute addresses</span> right now.',
+          '<strong>CALL 0x10020</strong> is hard-coded — the program MUST be loaded at 0x10000 or it will crash.',
+          'The object file already contains a relocation table entry for the C library (printf).'
+        ]
+      }
+    },
+    {
+      id: 'link',
+      name: 'Linking',
+      stageLabel: 'sum (executable)',
+      color: '#4a9de8',
+      annotation: '<strong>Linking → Executable</strong> — The linker resolves external symbols (e.g. <code>printf</code>) and combines object files. For compile-time binding, addresses are <em>already absolute</em> — the linker merely patches the few remaining external references and sets the entry point.',
+      code: `<span class="comment">; Linked executable — compile-time binding</span>
+<span class="comment">; All addresses already absolute from compiler. Linker patched printf.</span>
+
+<span class="comment">; ELF header: entry point = 0x10060 (main)</span>
+
+<span class="comment">; === .data === base: 0x10000</span>
+<span class="addr-abs">0x10000</span>:  <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>         <span class="comment">; data[4]</span>
+<span class="addr-abs">0x10010</span>:  <span class="num">0x00000000</span>              <span class="comment">; result</span>
+
+<span class="comment">; === .text === sum() at 0x10020</span>
+<span class="addr-abs">0x10020</span>:  <span class="normal">PUSH BP  / MOV BP,SP</span>
+          <span class="normal">... (loop body) ...</span>
+          <span class="normal">RET</span>
+
+<span class="comment">; main() at 0x10060</span>
+<span class="addr-abs">0x10060</span>:  <span class="normal">PUSH</span>  <span class="num">4</span>
+<span class="normal">          PUSH</span>  <span class="addr-abs">0x10000</span>             <span class="comment">; &amp;data</span>
+<span class="normal">          CALL</span>  <span class="addr-abs">0x10020</span>             <span class="comment">; sum()</span>
+<span class="normal">          MOV</span>   [<span class="addr-abs">0x10010</span>], <span class="normal">AX</span>      <span class="comment">; result</span>
+<span class="normal">          PUSH</span>  <span class="addr-abs">0x10010</span>
+<span class="normal">          CALL</span>  <span class="addr-abs">0x40C020</span>            <span class="comment">; printf — NOW resolved by linker</span>
+<span class="normal">          XOR AX,AX / RET</span>
+
+<span class="comment">; Relocation table: EMPTY (all addresses already absolute)</span>`,
+      explain: {
+        title: '③ Linking → Executable',
+        icon: '🔗',
+        points: [
+          'The linker combines the object file with the C runtime library (libc).',
+          'It resolves external references: <strong>printf</strong> gets its absolute address <span class="addr-abs">0x40C020</span> from the library.',
+          'The relocation table is now <strong>empty</strong> — no more address fixups remain.',
+          'The ELF header records the entry point as <span class="addr-abs">0x10060</span> (address of main).',
+          'The executable is still on disk; nothing is in memory yet.'
+        ]
+      }
+    },
+    {
+      id: 'load',
+      name: 'Loading',
+      stageLabel: 'Process in RAM',
+      color: '#4a9de8',
+      annotation: '<strong>Loading</strong> — The OS loader copies the executable into memory <em>exactly at 0x10000</em>. Since all addresses were baked in at compile time, the loader performs <strong>zero address patches</strong>. However, if 0x10000 is already in use, the program <strong>cannot run</strong>.',
+      code: `<span class="comment">; Physical memory image — compile-time binding</span>
+<span class="comment">; Loader placed program at exactly 0x10000 (no choice)</span>
+
+<span class="comment">; === Physical RAM ===</span>
+<span class="addr-abs">0x10000</span>:  <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>   <span class="comment">; data[4]  ← same as disk image</span>
+<span class="addr-abs">0x10010</span>:  <span class="num">0x00000000</span>       <span class="comment">; result</span>
+<span class="addr-abs">0x10020</span>:  <span class="normal">[machine code sum()]</span>
+<span class="addr-abs">0x10060</span>:  <span class="normal">PUSH 4</span>
+           <span class="normal">PUSH  </span><span class="addr-abs">0x10000</span>      <span class="comment">; &amp;data — unchanged</span>
+           <span class="normal">CALL  </span><span class="addr-abs">0x10020</span>      <span class="comment">; sum()  — unchanged</span>
+           <span class="normal">MOV   [</span><span class="addr-abs">0x10010</span><span class="normal">], AX</span> <span class="comment">; result — unchanged</span>
+           <span class="normal">PUSH  </span><span class="addr-abs">0x10010</span>
+           <span class="normal">CALL  </span><span class="addr-abs">0x40C020</span>     <span class="comment">; printf — unchanged</span>
+
+<span class="comment">; Patches applied by loader: 0</span>
+<span class="comment">; ⚠ If address 0x10000 is taken → LOAD FAILS</span>`,
+      memMap: {
+        title: 'Physical Memory Layout',
+        segments: [
+          { name: 'OS Kernel',   addr: '0x00000 – 0x0FFFF', cls: '' },
+          { name: '.text (sum)', addr: '0x10020 – 0x1005F', cls: 'text-seg highlight-seg' },
+          { name: '.data',       addr: '0x10000 – 0x1000F', cls: 'data-seg highlight-seg' },
+          { name: '.bss (result)',addr: '0x10010 – 0x10013', cls: 'data-seg highlight-seg' },
+          { name: 'libc (printf)',addr: '0x40C000 – 0x40CFFF', cls: '' },
+          { name: 'Stack',       addr: '0xFFFF0 – 0xFFFFF', cls: 'stack-seg' },
+        ]
+      },
+      explain: {
+        title: '④ Loading into Memory',
+        icon: '📦',
+        points: [
+          'The OS copies the executable from disk into physical memory, <em>starting at 0x10000</em>.',
+          '<strong>Zero</strong> address patches are needed — all addresses were baked in at compile time.',
+          'The CPU\'s instruction pointer (EIP) is set to the entry point: <span class="addr-abs">0x10060</span>.',
+          '<strong>Fatal limitation:</strong> If another process already occupies 0x10000–0x10070, loading fails entirely.',
+          'This rigid memory placement is the core disadvantage of compile-time binding.'
+        ]
+      }
+    },
+    {
+      id: 'runtime',
+      name: 'Execution',
+      stageLabel: 'CPU executing',
+      color: '#4a9de8',
+      annotation: '<strong>Execution</strong> — The CPU fetches and executes instructions. Every address it encounters (<span class="addr-abs">0x10000</span>, <span class="addr-abs">0x10020</span> …) is already <em>a direct physical address</em> — no translation needed. The MMU is essentially a passthrough for these already-absolute addresses (in a non-paged mode).',
+      code: `<span class="comment">; CPU Execution trace — compile-time binding</span>
+<span class="comment">; EIP starts at 0x10060 (main)</span>
+
+<span class="comment">; Instruction fetch at physical 0x10060:</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x10060</span>  <span class="normal">PUSH  4</span>           <span class="comment">; push n onto stack</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x10062</span>  <span class="normal">PUSH  </span><span class="addr-abs">0x10000</span>    <span class="comment">; push &amp;data — DIRECT physical addr</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x10067</span>  <span class="normal">CALL  </span><span class="addr-abs">0x10020</span>    <span class="comment">; jump to sum() — DIRECT physical addr</span>
+
+<span class="comment">; Inside sum() loop:</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x10020</span>  <span class="normal">... loop reads </span><span class="addr-abs">0x10000</span><span class="normal">, </span><span class="addr-abs">0x10004</span><span class="normal">, </span><span class="addr-abs">0x10008</span><span class="normal">, </span><span class="addr-abs">0x1000C</span>
+
+<span class="comment">; Back in main:</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x1006C</span>  <span class="normal">MOV   [</span><span class="addr-abs">0x10010</span><span class="normal">], AX</span>  <span class="comment">; write result to PHYSICAL 0x10010</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x10071</span>  <span class="normal">PUSH  </span><span class="addr-abs">0x10010</span>    <span class="comment">; pass &amp;result to printf</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x10076</span>  <span class="normal">CALL  </span><span class="addr-abs">0x40C020</span>   <span class="comment">; call printf — absolute physical</span>
+
+<span class="comment">; MMU translation: IDENTITY (logical == physical)</span>
+<span class="comment">; No page table lookup needed in this mode.</span>`,
+      explain: {
+        title: '⑤ Execution',
+        icon: '🖥️',
+        points: [
+          'Every address operand in every instruction is already a <strong>physical RAM address</strong>.',
+          'No MMU translation occurs — the CPU accesses memory directly.',
+          '<strong>CALL 0x10020</strong> jumps the instruction pointer directly to the physical location of sum().',
+          'The read of <span class="addr-abs">0x10000</span>–<span class="addr-abs">0x1000C</span> fetches data[] directly from physical RAM.',
+          '<strong>Summary:</strong> Fast, simple, but completely inflexible. Only one program can occupy this address range.'
+        ]
+      }
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  load: [
+    {
+      id: 'source',
+      name: 'Source Code',
+      stageLabel: 'sum.c',
+      color: '#8fbfe8',
+      annotation: '<strong>Source Code (sum.c)</strong> — Identical starting point. All identifiers are <span class="addr-sym">symbolic</span>. For load-time binding, the compiler will generate <em>relocatable</em> rather than absolute code.',
+      code: SOURCE_CODE,
+      explain: {
+        title: '① Source Code',
+        icon: '📄',
+        points: [
+          'Identical source code — all names are <strong>symbolic</strong>.',
+          'The difference from compile-time binding begins at the <em>compiler output</em>.',
+          'The compiler will produce position-independent / relocatable object code.',
+          'Final addresses will only be known when the OS loader places the program in memory.'
+        ]
+      }
+    },
+    {
+      id: 'compile',
+      name: 'Compilation',
+      stageLabel: 'sum.o (relocatable)',
+      color: '#38bea0',
+      annotation: '<strong>Compilation → Relocatable Object File</strong> — The compiler generates addresses as <span class="addr-rel">offsets from 0</span>. Every address reference is accompanied by a <em>relocation entry</em> — a table telling the loader "patch this location when you know the base address".',
+      morphTargets: ['data', 'result', 'sum', 'main'],
+      code: `<span class="comment">; sum.o — relocatable object file (load-time binding)</span>
+<span class="comment">; All addresses are OFFSETS from base 0x0 — NOT absolute yet</span>
+
+<span class="comment">; .data section — offset from segment base</span>
+<span class="addr-rel">offset+0x00</span>:  <span class="normal">data</span>    <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>    <span class="comment">; data[4]  (16 bytes)</span>
+<span class="addr-rel">offset+0x10</span>:  <span class="normal">result</span>  <span class="num">0</span>                 <span class="comment">; result   (4 bytes, BSS)</span>
+
+<span class="comment">; .text section — sum() at text offset 0x00</span>
+<span class="addr-rel">offset+0x00</span>:  <span class="normal">PUSH  BP  /  MOV BP, SP</span>
+              <span class="normal">XOR   AX, AX              </span><span class="comment">; total=0</span>
+              <span class="normal">MOV   CX, [BP+8]          </span><span class="comment">; n</span>
+              <span class="normal">MOV   SI, [BP+4]          </span><span class="comment">; arr ptr</span>
+<span class="normal">.loop:        ADD   AX, [SI]  /  ADD SI,4  /  LOOP .loop</span>
+              <span class="normal">POP   BP  /  RET</span>
+
+<span class="comment">; main() at text offset 0x40</span>
+<span class="addr-rel">offset+0x40</span>:  <span class="normal">PUSH  4</span>
+              <span class="normal">PUSH  </span><span class="addr-rel">DATA+0x00</span>          <span class="comment">; &amp;data — RELOC ENTRY #1</span>
+              <span class="normal">CALL  </span><span class="addr-rel">TEXT+0x00</span>          <span class="comment">; sum()  — RELOC ENTRY #2</span>
+              <span class="normal">MOV   [</span><span class="addr-rel">DATA+0x10</span><span class="normal">], AX</span>   <span class="comment">; result — RELOC ENTRY #3</span>
+              <span class="normal">PUSH  </span><span class="addr-rel">DATA+0x10</span>          <span class="comment">; &amp;result— RELOC ENTRY #4</span>
+              <span class="normal">CALL  </span><span class="addr-rel">EXTERN:printf</span>       <span class="comment">; printf — RELOC ENTRY #5</span>
+              <span class="normal">XOR AX,AX  /  RET</span>
+
+<span class="comment">; Relocation table: 5 entries — loader must patch all of them</span>`,
+      explain: {
+        title: '② Compilation → Relocatable Object',
+        icon: '⚙️',
+        points: [
+          'The compiler assigns addresses as <strong>offsets from 0</strong>, not absolute values.',
+          'For load-time binding, <strong>no final address is chosen yet</strong> — this is up to the loader.',
+          'A <strong>relocation table</strong> is embedded in the .o file with 5 entries listing every address reference.',
+          '<span class="addr-rel">DATA+0x00</span> means "the address of data[], relative to wherever .data gets placed".',
+          'This object file can be placed at ANY base address by the loader.'
+        ]
+      }
+    },
+    {
+      id: 'link',
+      name: 'Linking',
+      stageLabel: 'sum (ELF, relocatable)',
+      color: '#38bea0',
+      annotation: '<strong>Linking → Relocatable Executable</strong> — The linker combines object files and resolves cross-file symbols (including printf). Addresses remain as <span class="addr-rel">relocatable offsets</span>. The relocation table is preserved — the loader will use it.',
+      code: `<span class="comment">; Linked executable — load-time binding</span>
+<span class="comment">; Linker resolved printf; relocation table PRESERVED for loader</span>
+
+<span class="comment">; ELF header: load addr = TBD (0x0 placeholder), entry = TEXT+0x40</span>
+
+<span class="comment">; === .data === (linked offset from file base)</span>
+<span class="addr-rel">base+0x1000</span>:  <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>         <span class="comment">; data[4]</span>
+<span class="addr-rel">base+0x1010</span>:  <span class="num">0x00000000</span>              <span class="comment">; result</span>
+
+<span class="comment">; === .text ===</span>
+<span class="addr-rel">base+0x1020</span>:  <span class="normal">PUSH BP  ...</span>             <span class="comment">; sum()</span>
+<span class="addr-rel">base+0x1060</span>:  <span class="normal">PUSH  4</span>
+              <span class="normal">PUSH  </span><span class="addr-rel">[RELOC#1]</span>           <span class="comment">; &amp;data — loader patches</span>
+              <span class="normal">CALL  </span><span class="addr-rel">[RELOC#2]</span>           <span class="comment">; sum()  — loader patches</span>
+              <span class="normal">MOV   [</span><span class="addr-rel">[RELOC#3]</span><span class="normal">], AX</span>    <span class="comment">; result — loader patches</span>
+              <span class="normal">PUSH  </span><span class="addr-rel">[RELOC#4]</span>           <span class="comment">; &amp;result— loader patches</span>
+              <span class="normal">CALL  </span><span class="addr-rel">0x40C020</span>            <span class="comment">; printf — resolved by linker ✓</span>
+              <span class="normal">XOR AX,AX  /  RET</span>
+
+<span class="comment">; Relocation table (4 remaining entries for loader):</span>
+<span class="comment">;   #1 @ text+0x63: add base to &amp;data</span>
+<span class="comment">;   #2 @ text+0x68: add base to &amp;sum</span>
+<span class="comment">;   #3 @ text+0x6D: add base to &amp;result</span>
+<span class="comment">;   #4 @ text+0x72: add base to &amp;result (printf arg)</span>`,
+      explain: {
+        title: '③ Linking → Relocatable Executable',
+        icon: '🔗',
+        points: [
+          'The linker combines all .o files and libraries into a single executable.',
+          'External reference <strong>printf</strong> is resolved to its library address (<span class="addr-rel">0x40C020</span>) — a known absolute.',
+          'The <strong>relocation table</strong> still has 4 entries for internal references (data, sum, result).',
+          'The ELF file stores a placeholder load address of 0 — the actual base is assigned by the OS loader.',
+          'The executable is on disk; addresses are still relative to base 0.'
+        ]
+      }
+    },
+    {
+      id: 'load',
+      name: 'Loading',
+      stageLabel: 'Process in RAM — patched',
+      color: '#38bea0',
+      annotation: '<strong>Loading — Address Patching</strong> — The OS chooses a base (e.g. <span class="addr-abs">0x20000</span>) and copies the program into RAM. It then iterates through the relocation table, adding 0x20000 to each recorded offset. After patching, all <span class="addr-rel">relative</span> references become <span class="addr-abs">absolute addresses</span>. Binding is now complete.',
+      code: `<span class="comment">; Physical memory image — load-time binding</span>
+<span class="comment">; OS chose base = 0x20000  →  loader added 0x20000 to all 4 reloc entries</span>
+
+<span class="comment">; === .data === loaded at 0x21000</span>
+<span class="addr-abs">0x21000</span>:  <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>         <span class="comment">; data[4]</span>
+<span class="addr-abs">0x21010</span>:  <span class="num">0x00000000</span>              <span class="comment">; result</span>
+
+<span class="comment">; === .text === sum() at 0x21020</span>
+<span class="addr-abs">0x21020</span>:  <span class="normal">PUSH BP  /  MOV BP,SP  ...</span>
+
+<span class="comment">; main() at 0x21060</span>
+<span class="addr-abs">0x21060</span>:  <span class="normal">PUSH  4</span>
+          <span class="normal">PUSH  </span><span class="addr-abs">0x21000</span>            <span class="comment">; &amp;data ← base+0x1000  PATCHED ✓</span>
+          <span class="normal">CALL  </span><span class="addr-abs">0x21020</span>            <span class="comment">; sum() ← base+0x1020  PATCHED ✓</span>
+          <span class="normal">MOV   [</span><span class="addr-abs">0x21010</span><span class="normal">], AX</span>     <span class="comment">; result← base+0x1010  PATCHED ✓</span>
+          <span class="normal">PUSH  </span><span class="addr-abs">0x21010</span>            <span class="comment">; &amp;result← base+0x1010 PATCHED ✓</span>
+          <span class="normal">CALL  </span><span class="addr-abs">0x40C020</span>           <span class="comment">; printf — unchanged (already abs)</span>
+          <span class="normal">XOR AX,AX  /  RET</span>
+
+<span class="comment">; ✓ 4 relocation patches applied. Process is BOUND to 0x20000.</span>
+<span class="comment">; Process cannot be moved in memory after this point.</span>`,
+      morphTargets: ['reloc1', 'reloc2', 'reloc3', 'reloc4'],
+      memMap: {
+        title: 'Physical Memory Layout',
+        segments: [
+          { name: 'OS Kernel',    addr: '0x00000 – 0x1FFFF', cls: '' },
+          { name: '.text (sum+main)', addr: '0x21020 – 0x2107F', cls: 'text-seg highlight-seg' },
+          { name: '.data',        addr: '0x21000 – 0x2100F', cls: 'data-seg highlight-seg' },
+          { name: '.bss (result)',addr: '0x21010 – 0x21013', cls: 'data-seg highlight-seg' },
+          { name: 'Other Process',addr: '0x30000 – 0x3FFFF', cls: '' },
+          { name: 'libc',         addr: '0x40C000 – 0x40CFFF', cls: '' },
+          { name: 'Stack',        addr: '0xFFFF0 – 0xFFFFF', cls: 'stack-seg' },
+        ]
+      },
+      explain: {
+        title: '④ Loading — Address Patching',
+        icon: '📦',
+        points: [
+          'OS decides to load the program at base address <strong>0x20000</strong>.',
+          'The loader copies the file into RAM, then processes the relocation table.',
+          '<strong>4 patches</strong>: each relocatable offset + 0x20000 = the final absolute address.',
+          'After loading, the program is <strong>bound to 0x20000</strong> and cannot be moved.',
+          'Unlike compile-time, the same executable can be loaded at ANY base — just a different batch of patches.'
+        ]
+      }
+    },
+    {
+      id: 'runtime',
+      name: 'Execution',
+      stageLabel: 'CPU executing',
+      color: '#38bea0',
+      annotation: '<strong>Execution</strong> — Addresses are now absolute (patched at load time). CPU executes with physical addresses. No further translation. Note: process <em>cannot be swapped out and relocated</em> without re-patching — this limits multiprogramming flexibility.',
+      code: `<span class="comment">; CPU Execution trace — load-time binding</span>
+<span class="comment">; EIP starts at 0x21060 (main) — patched entry point</span>
+
+<span class="normal">EIP=</span><span class="addr-abs">0x21060</span>  <span class="normal">PUSH  4</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x21062</span>  <span class="normal">PUSH  </span><span class="addr-abs">0x21000</span>    <span class="comment">; &amp;data — absolute (was patched)</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x21067</span>  <span class="normal">CALL  </span><span class="addr-abs">0x21020</span>    <span class="comment">; sum() — absolute (was patched)</span>
+
+<span class="comment">; loop reads: 0x21000, 0x21004, 0x21008, 0x2100C</span>
+
+<span class="normal">EIP=</span><span class="addr-abs">0x2106C</span>  <span class="normal">MOV [</span><span class="addr-abs">0x21010</span><span class="normal">], AX</span>  <span class="comment">; write result</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x21071</span>  <span class="normal">PUSH  </span><span class="addr-abs">0x21010</span>
+<span class="normal">EIP=</span><span class="addr-abs">0x21076</span>  <span class="normal">CALL  </span><span class="addr-abs">0x40C020</span>   <span class="comment">; printf</span>
+
+<span class="comment">; ⚠ If OS needs to move this process → must re-run all 4 reloc patches</span>
+<span class="comment">; Modern OSes use run-time binding (paging) to avoid this limitation.</span>`,
+      explain: {
+        title: '⑤ Execution',
+        icon: '🖥️',
+        points: [
+          'All addresses are now absolute physical addresses (patched by the loader).',
+          'CPU accesses memory directly — no translation step at runtime.',
+          'The program runs at <span class="addr-abs">0x21060</span> through its lifetime.',
+          '<strong>Key limitation:</strong> The process cannot be swapped out and reloaded at a different address without re-patching.',
+          'This limitation is resolved by run-time binding with paging.'
+        ]
+      }
+    }
+  ],
+
+  // ═══════════════════════════════════════════════════════════
+  runtime: [
+    {
+      id: 'source',
+      name: 'Source Code',
+      stageLabel: 'sum.c',
+      color: '#8fbfe8',
+      annotation: '<strong>Source Code (sum.c)</strong> — The same program. With run-time binding, not only are addresses relocatable, but they are <em>never translated to physical addresses at all</em> — the program always works with <span class="addr-virt">logical (virtual) addresses</span>.',
+      code: SOURCE_CODE,
+      explain: {
+        title: '① Source Code',
+        icon: '📄',
+        points: [
+          'The same C source — all identifiers are symbolic.',
+          'For run-time binding, addresses will become <strong>virtual/logical addresses</strong> in the final binary.',
+          'The MMU + page table handles all logical→physical translation at runtime.',
+          'The programmer writes the same code regardless of binding type.'
+        ]
+      }
+    },
+    {
+      id: 'compile',
+      name: 'Compilation',
+      stageLabel: 'sum.o (PIC/relocatable)',
+      color: '#b464e8',
+      annotation: '<strong>Compilation → Position-Independent Object</strong> — The compiler generates code where addresses are <span class="addr-virt">virtual offsets from 0</span>. With modern compilers using <code>-fPIC</code>, references use the <em>Global Offset Table (GOT)</em> / <em>PLT</em> for maximum flexibility.',
+      morphTargets: ['data', 'result', 'sum', 'main'],
+      code: `<span class="comment">; sum.o — Position-Independent Code (runtime binding)</span>
+<span class="comment">; Compiler used virtual address space offsets (like load-time)</span>
+<span class="comment">; Key difference: these will remain VIRTUAL even after loading</span>
+
+<span class="comment">; .data — virtual offset from segment base</span>
+<span class="addr-virt">virt+0x00</span>:  <span class="normal">data</span>    <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>    <span class="comment">; int data[4]</span>
+<span class="addr-virt">virt+0x10</span>:  <span class="normal">result</span>  <span class="num">0</span>                 <span class="comment">; int result</span>
+
+<span class="comment">; .text — sum() at virtual text offset 0x00</span>
+<span class="addr-virt">virt+0x00</span>:  <span class="normal">PUSH BP  /  MOV BP,SP</span>
+            <span class="normal">XOR  AX, AX</span>              <span class="comment">; total=0</span>
+<span class="normal">.loop:      ADD  AX, [SI]  /  ADD SI,4  /  LOOP .loop</span>
+            <span class="normal">RET</span>
+
+<span class="comment">; main() at virtual text offset 0x40</span>
+<span class="addr-virt">virt+0x40</span>:  <span class="normal">PUSH  4</span>
+            <span class="normal">PUSH  </span><span class="addr-virt">VIRT_DATA+0x00</span>     <span class="comment">; &amp;data — RELOC #1</span>
+            <span class="normal">CALL  </span><span class="addr-virt">VIRT_TEXT+0x00</span>     <span class="comment">; sum()  — RELOC #2</span>
+            <span class="normal">MOV   [</span><span class="addr-virt">VIRT_DATA+0x10</span><span class="normal">],AX</span><span class="comment">; result — RELOC #3</span>
+            <span class="normal">PUSH  </span><span class="addr-virt">VIRT_DATA+0x10</span>     <span class="comment">; &amp;result— RELOC #4</span>
+            <span class="normal">CALL  </span><span class="addr-virt">EXTERN:printf</span>       <span class="comment">; printf — via PLT</span>
+            <span class="normal">XOR AX,AX  /  RET</span>`,
+      explain: {
+        title: '② Compilation → PIC Object',
+        icon: '⚙️',
+        points: [
+          'The compiler generates code with <strong>virtual address offsets</strong> (similar to load-time).',
+          'Key difference: these virtual addresses are <em>never patched to physical addresses</em>.',
+          'The CPU will always execute with <strong>logical (virtual) addresses</strong>.',
+          'The <strong>MMU</strong> does real-time translation: virtual → physical on every memory access.',
+          'Using <code>-fPIC</code> enables shared libraries; references go via the <strong>GOT/PLT</strong>.'
+        ]
+      }
+    },
+    {
+      id: 'link',
+      name: 'Linking',
+      stageLabel: 'sum (ELF, virtual addrs)',
+      color: '#b464e8',
+      annotation: '<strong>Linking → ELF with Virtual Address Space</strong> — The linker assigns a <em>virtual address space layout</em>. The standard Linux x86-64 user space starts at <span class="addr-virt">0x400000</span>. These are <em>logical addresses</em> — they look absolute but the MMU translates them to physical on every access.',
+      code: `<span class="comment">; Linked ELF — run-time binding</span>
+<span class="comment">; Linker placed program in VIRTUAL address space starting at 0x400000</span>
+<span class="comment">; These are LOGICAL addresses — MMU will translate to physical</span>
+
+<span class="comment">; ELF header: e_entry = 0x401040 (main), virtual</span>
+
+<span class="comment">; === .data === virtual 0x402000</span>
+<span class="addr-virt">0x402000</span>:  <span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>         <span class="comment">; data[4]</span>
+<span class="addr-virt">0x402010</span>:  <span class="num">0x00000000</span>              <span class="comment">; result</span>
+
+<span class="comment">; === .text === sum() at virtual 0x401000</span>
+<span class="addr-virt">0x401000</span>:  <span class="normal">PUSH BP  / ...  / RET</span>
+
+<span class="comment">; main() at virtual 0x401040</span>
+<span class="addr-virt">0x401040</span>:  <span class="normal">PUSH  4</span>
+           <span class="normal">PUSH  </span><span class="addr-virt">0x402000</span>            <span class="comment">; &amp;data  — VIRTUAL</span>
+           <span class="normal">CALL  </span><span class="addr-virt">0x401000</span>            <span class="comment">; sum()  — VIRTUAL</span>
+           <span class="normal">MOV   [</span><span class="addr-virt">0x402010</span><span class="normal">],AX</span>      <span class="comment">; result — VIRTUAL</span>
+           <span class="normal">PUSH  </span><span class="addr-virt">0x402010</span>            <span class="comment">; &amp;result— VIRTUAL</span>
+           <span class="normal">CALL  </span><span class="addr-virt">0x401020</span>            <span class="comment">; printf@PLT — VIRTUAL</span>
+           <span class="normal">XOR AX,AX  /  RET</span>
+
+<span class="comment">; ✓ These look absolute but they're VIRTUAL — physical location unknown</span>
+<span class="comment">; The page table (set up at load time) maps virtual→physical</span>`,
+      explain: {
+        title: '③ Linking → Virtual Address Space',
+        icon: '🔗',
+        points: [
+          'The linker places the program in a <strong>virtual address space</strong> starting at <span class="addr-virt">0x400000</span> (Linux convention).',
+          'These look like absolute addresses but are <em>logical addresses</em> — the process\'s own view of memory.',
+          'Two different processes can both have code at virtual <span class="addr-virt">0x401000</span> — they map to different physical frames.',
+          'The <strong>page table</strong> is the translation map; it will be set up by the loader.',
+          'printf is called via the <strong>PLT</strong> (Procedure Linkage Table) for dynamic linking.'
+        ]
+      }
+    },
+    {
+      id: 'load',
+      name: 'Loading',
+      stageLabel: 'Page table setup',
+      color: '#b464e8',
+      annotation: '<strong>Loading — Page Table Construction</strong> — The OS loader maps the virtual pages of the executable to physical frames in RAM. No address patching in the code — instead, the MMU\'s <em>page table</em> is populated. The code itself uses <span class="addr-virt">virtual addresses</span> throughout.',
+      code: `<span class="comment">; Loading — run-time binding</span>
+<span class="comment">; OS allocates physical frames &amp; builds page table</span>
+<span class="comment">; Code is NOT patched — virtual addresses remain as-is</span>
+
+<span class="comment">; === Code in RAM (unchanged virtual addresses) ===</span>
+<span class="addr-virt">0x401040</span>:  <span class="normal">PUSH  4</span>
+           <span class="normal">PUSH  </span><span class="addr-virt">0x402000</span>            <span class="comment">; &amp;data  — still VIRTUAL</span>
+           <span class="normal">CALL  </span><span class="addr-virt">0x401000</span>            <span class="comment">; sum()  — still VIRTUAL</span>
+           <span class="normal">MOV   [</span><span class="addr-virt">0x402010</span><span class="normal">],AX</span>      <span class="comment">; result — still VIRTUAL</span>
+           <span class="normal">...</span>
+
+<span class="comment">; === Page Table built by OS loader ===</span>
+<span class="comment">; Virtual Page → Physical Frame  (page size = 4KB = 0x1000)</span>
+<span class="comment">; VPN 0x401  →  PFN 0x3A2   (.text: sum+main)</span>
+<span class="comment">; VPN 0x402  →  PFN 0x1F7   (.data: data[], result)</span>
+<span class="comment">; Stack VPN  →  PFN 0x8B4</span>
+
+<span class="comment">; === Address Translation Example ===</span>
+<span class="comment">; CPU issues virtual addr 0x402000 (access data[0])</span>
+<span class="comment">;   VPN  = 0x402000 &gt;&gt; 12 = 0x402</span>
+<span class="comment">;   PFN  = page_table[0x402] = 0x1F7</span>
+<span class="comment">;   phys = (0x1F7 &lt;&lt; 12) | (0x402000 &amp; 0xFFF)</span>
+<span class="comment">;        = 0x1F7000 + 0x000 = </span><span class="addr-phys">0x1F7000</span>`,
+      memMap: {
+        title: 'Virtual Memory Layout',
+        segments: [
+          { name: 'Kernel space',   addr: '0xFFFF8000+', cls: '' },
+          { name: 'Stack (virtual)',addr: '0x7FFF0000',  cls: 'stack-seg highlight-seg' },
+          { name: 'mmap / libs',    addr: '0x7F000000',  cls: '' },
+          { name: '[heap]',         addr: '0x00403000',  cls: 'heap-seg' },
+          { name: '.data (virtual)',addr: '0x00402000',  cls: 'data-seg highlight-seg' },
+          { name: '.text (virtual)',addr: '0x00401000',  cls: 'text-seg highlight-seg' },
+          { name: 'ELF header',     addr: '0x00400000',  cls: '' },
+        ]
+      },
+      pageTable: {
+        title: 'Page Table: Virtual → Physical Translation',
+        entries: [
+          { vpn: '0x400', pfn: '0x0A1', valid: 'Y', desc: 'ELF hdr' },
+          { vpn: '0x401', pfn: '0x3A2', valid: 'Y', desc: '.text' },
+          { vpn: '0x402', pfn: '0x1F7', valid: 'Y', desc: '.data' },
+          { vpn: '0x7FF', pfn: '0x8B4', valid: 'Y', desc: 'Stack' },
+        ],
+        translate: {
+          virt: '0x402000',
+          vpn:  '0x402',
+          off:  '0x000',
+          pfn:  '0x1F7',
+          phys: '0x1F7000'
+        }
+      },
+      explain: {
+        title: '④ Loading — Page Table Setup',
+        icon: '📦',
+        points: [
+          'The OS allocates physical frames and fills in the <strong>page table</strong> for this process.',
+          '<strong>No code patching</strong> — the virtual addresses in the binary are left untouched.',
+          'Virtual page 0x401 → physical frame 0x3A2: accessing <span class="addr-virt">0x401040</span> reads from <span class="addr-phys">0x3A2040</span>.',
+          'Virtual page 0x402 → physical frame 0x1F7: accessing <span class="addr-virt">0x402000</span> reads from <span class="addr-phys">0x1F7000</span>.',
+          'The process can be <strong>moved or swapped</strong> at any time just by updating the page table.'
+        ]
+      }
+    },
+    {
+      id: 'runtime_exec',
+      name: 'Execution',
+      stageLabel: 'MMU translating',
+      color: '#e88c3c',
+      annotation: '<strong>Execution — MMU Translation on every access</strong> — The CPU issues <span class="addr-virt">virtual addresses</span>. The <strong>MMU intercepts every memory reference</strong>, looks up the page table (cached in TLB), and issues the corresponding <span class="addr-phys">physical address</span> to the memory bus. This is run-time binding in action.',
+      code: `<span class="comment">; CPU Execution — run-time binding (MMU active)</span>
+<span class="comment">; EIP = virtual 0x401040 → MMU → physical 0x3A2040</span>
+
+<span class="comment">; === Instruction fetch ===</span>
+<span class="normal">v-EIP=</span><span class="addr-virt">0x401040</span>  <span class="comment">→ MMU →</span>  <span class="normal">p-addr=</span><span class="addr-phys">0x3A2040</span>  <span class="comment">; PUSH 4</span>
+<span class="normal">v-EIP=</span><span class="addr-virt">0x401042</span>  <span class="comment">→ MMU →</span>  <span class="normal">p-addr=</span><span class="addr-phys">0x3A2042</span>  <span class="comment">; PUSH 0x402000</span>
+<span class="normal">v-EIP=</span><span class="addr-virt">0x401047</span>  <span class="comment">→ MMU →</span>  <span class="normal">p-addr=</span><span class="addr-phys">0x3A2047</span>  <span class="comment">; CALL 0x401000</span>
+
+<span class="comment">; === Data access — MMU translates EACH reference ===</span>
+<span class="normal">CPU issues:  </span><span class="addr-virt">0x402000</span>   <span class="comment">; &amp;data[0]</span>
+<span class="normal">MMU lookup:  VPN=</span><span class="addr-virt">0x402</span>  <span class="comment">→  PFN=</span><span class="addr-phys">0x1F7</span>
+<span class="normal">Physical:    </span><span class="addr-phys">0x1F7000</span>            <span class="comment">; actual RAM read ← 10</span>
+
+<span class="normal">CPU issues:  </span><span class="addr-virt">0x402004</span>   <span class="comment">; &amp;data[1]</span>
+<span class="normal">Physical:    </span><span class="addr-phys">0x1F7004</span>            <span class="comment">; actual RAM read ← 20</span>
+
+<span class="comment">; ... sum() returns 100 ...</span>
+
+<span class="normal">CPU issues:  </span><span class="addr-virt">0x402010</span>   <span class="comment">; &amp;result (write)</span>
+<span class="normal">Physical:    </span><span class="addr-phys">0x1F7010</span>            <span class="comment">; actual RAM write ← 100</span>
+
+<span class="comment">; If OS swaps process out &amp; reloads at different frames:</span>
+<span class="comment">; Just update page table: VPN 0x402 → new PFN</span>
+<span class="comment">; Code is UNCHANGED — virtual addresses are permanent</span>`,
+      pageTable: {
+        title: 'MMU: Active Translation During Execution',
+        entries: [
+          { vpn: '0x400', pfn: '0x0A1', valid: 'Y', desc: 'ELF hdr' },
+          { vpn: '0x401', pfn: '0x3A2', valid: 'Y', desc: '.text  ← executing' },
+          { vpn: '0x402', pfn: '0x1F7', valid: 'Y', desc: '.data  ← reading' },
+          { vpn: '0x7FF', pfn: '0x8B4', valid: 'Y', desc: 'Stack' },
+        ],
+        translate: {
+          virt: '0x402000',
+          vpn:  '0x402',
+          off:  '0x000',
+          pfn:  '0x1F7',
+          phys: '0x1F7000'
+        }
+      },
+      explain: {
+        title: '⑤ Execution — Live MMU Translation',
+        icon: '🖥️',
+        points: [
+          'The CPU <em>always</em> issues <strong>virtual addresses</strong> — it never sees physical RAM directly.',
+          'The <strong>MMU</strong> intercepts each memory reference and performs VPN→PFN lookup.',
+          'The <strong>TLB</strong> (Translation Lookaside Buffer) caches recent translations for speed.',
+          'If a page is not in RAM (page fault), the OS loads it from disk and updates the page table.',
+          '<strong>The process can be relocated</strong> at any point — just update the page table, not the code.',
+          'This is the basis of <strong>virtual memory</strong>, process isolation, and memory protection.'
+        ]
+      }
+    }
+  ]
+};
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+let currentType = 'compile';
+let currentStep = 0;
+let autoplayTimer = null;
+let isPlaying = false;
+
+// ─────────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────────
+function getSpeed() {
+  return parseInt(document.getElementById('speedSelect').value);
+}
+
+function stageColor(type) {
+  return { compile: '#4a9de8', load: '#38bea0', runtime: '#b464e8' }[type] || '#4a9de8';
+}
+
+function accentForStep(i) {
+  const colors = ['#8fbfe8','#4a9de8','#38bea0','#b464e8','#e88c3c'];
+  return colors[Math.min(i, colors.length-1)];
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER THEORY
+// ─────────────────────────────────────────────────────────────
+function renderTheory(type) {
+  const t = THEORY[type];
+  document.getElementById('theoryTitle').innerHTML =
+    `${t.title} <span class="badge" style="border-color:${t.badgeColor};color:${t.badgeColor}">${t.badge}</span>`;
+  document.getElementById('theoryText1').innerHTML = t.p1;
+  document.getElementById('theoryText2').innerHTML = t.p2;
+  document.getElementById('theoryBox').style.setProperty('--accent-color', t.accentColor);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER PIPELINE
+// ─────────────────────────────────────────────────────────────
+function renderPipeline(type, activeStep) {
+  const stages = STAGES[type];
+  const pipe = document.getElementById('pipeline');
+  pipe.innerHTML = '';
+  stages.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'pipe-step' + (i === activeStep ? ' active' : '') + (i < activeStep ? ' done' : '');
+    div.style.setProperty('--step-color', accentForStep(i));
+    div.innerHTML = `<div class="pipe-num">${i+1 < 10 ? '0'+(i+1) : i+1}</div><div class="pipe-name">${s.name}</div>`;
+    div.onclick = () => goToStep(i);
+    pipe.appendChild(div);
+    if (i < stages.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'pipe-arrow';
+      arrow.innerHTML = '→';
+      pipe.appendChild(arrow);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER ALL PANELS (static skeleton)
+// ─────────────────────────────────────────────────────────────
+function renderPanels(type) {
+  const stages = STAGES[type];
+  const container = document.getElementById('stagePanels');
+  container.innerHTML = '';
+
+  stages.forEach((s, i) => {
+    const panel = document.createElement('div');
+    panel.className = 'stage-panel fade-up';
+    panel.id = `panel-${i}`;
+    panel.style.setProperty('--step-color', accentForStep(i));
+    panel.style.animationDelay = `${i * 0.06}s`;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'panel-header';
+    header.innerHTML = `
+      <div class="panel-dot dim" id="dot-${i}"></div>
+      <div class="panel-title">${s.name} <span style="color:var(--text-muted);font-weight:400;font-size:12px">— ${s.stageLabel}</span></div>
+      <div class="panel-stage-tag" id="tag-${i}">${s.stageLabel}</div>
+    `;
+
+    // Code area
+    const codeWrap = document.createElement('div');
+    codeWrap.className = 'code-wrap';
+    codeWrap.innerHTML = `<div class="code-block" id="code-${i}">${s.code}</div>`;
+
+    // Annotation
+    const ann = document.createElement('div');
+    ann.className = 'annotation';
+    ann.id = `ann-${i}`;
+    ann.innerHTML = `<span style="color:var(--blue-dark)">◆ Awaiting activation…</span>`;
+
+    panel.appendChild(header);
+    panel.appendChild(codeWrap);
+
+    // Memory map
+    if (s.memMap) {
+      const memDiv = document.createElement('div');
+      memDiv.className = 'mem-diagram';
+      memDiv.id = `mem-${i}`;
+      memDiv.style.display = 'none';
+      memDiv.innerHTML = buildMemMap(s.memMap);
+      panel.appendChild(memDiv);
+    }
+
+    // Page table
+    if (s.pageTable) {
+      const ptDiv = document.createElement('div');
+      ptDiv.className = 'pt-diagram';
+      ptDiv.id = `pt-${i}`;
+      ptDiv.style.display = 'none';
+      ptDiv.innerHTML = buildPageTable(s.pageTable);
+      panel.appendChild(ptDiv);
+    }
+
+    panel.appendChild(ann);
+
+    // Explanation
+    const expDiv = document.createElement('div');
+    expDiv.className = 'step-explain';
+    expDiv.id = `exp-${i}`;
+    expDiv.style.display = 'none';
+    expDiv.innerHTML = buildExplain(s.explain);
+    panel.appendChild(expDiv);
+
+    container.appendChild(panel);
+  });
+}
+
+function buildMemMap(mm) {
+  const segs = mm.segments.map(s => `
+    <div class="mem-seg ${s.cls}">
+      <span class="mem-seg-name">${s.name}</span>
+      <span class="mem-seg-addr">${s.addr}</span>
+    </div>`).join('');
+  return `
+    <div class="mem-column" style="flex:2">
+      <div class="mem-col-title">${mm.title}</div>
+      <div class="mem-block">${segs}</div>
+    </div>`;
+}
+
+function buildPageTable(pt) {
+  const rows = pt.entries.map((e, i) =>
+    `<div class="pt-table-row" id="pt-row-${i}">
+      <span class="pt-cell virt">${e.vpn}</span>
+      <span class="pt-cell frame">${e.pfn}</span>
+      <span class="pt-cell valid">${e.valid} — ${e.desc}</span>
+    </div>`
+  ).join('');
+
+  const tr = pt.translate;
+  return `
+    <div class="pt-title">${pt.title}</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div class="pt-table-wrap">
+        <div class="pt-table">
+          <div class="pt-table-head"><span>VPN</span><span>PFN</span><span>Valid</span></div>
+          ${rows}
+        </div>
+      </div>
+      <div style="flex:1;min-width:300px">
+        <div class="pt-title" style="text-align:left;margin-bottom:12px">Address Translation Example</div>
+        <div class="pt-flow" style="justify-content:flex-start;flex-wrap:wrap;gap:0">
+          <div class="pt-box">
+            <div class="pt-box-label">Virtual Addr</div>
+            <div class="pt-box-value" style="color:#b464e8">${tr.virt}</div>
+          </div>
+          <div class="pt-arrow">
+            <div>→</div>
+            <div class="pt-arrow-label">split</div>
+          </div>
+          <div>
+            <div class="pt-box" style="margin-bottom:6px">
+              <div class="pt-box-label">Page # (VPN)</div>
+              <div class="pt-box-value" style="color:#b464e8">${tr.vpn}</div>
+            </div>
+            <div class="pt-box">
+              <div class="pt-box-label">Offset</div>
+              <div class="pt-box-value" style="color:#b464e8">${tr.off}</div>
+            </div>
+          </div>
+          <div class="pt-arrow">
+            <div>→</div>
+            <div class="pt-arrow-label">lookup</div>
+          </div>
+          <div class="pt-box">
+            <div class="pt-box-label">Frame # (PFN)</div>
+            <div class="pt-box-value" style="color:#e88c3c">${tr.pfn}</div>
+          </div>
+          <div class="pt-arrow">
+            <div>→</div>
+            <div class="pt-arrow-label">combine</div>
+          </div>
+          <div class="pt-box" style="border-color:rgba(232,140,60,0.5);background:rgba(232,140,60,0.08)">
+            <div class="pt-box-label">Physical Addr</div>
+            <div class="pt-box-value" style="color:#e88c3c">${tr.phys}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildExplain(ex) {
+  const items = ex.points.map(p => `<li>${p}</li>`).join('');
+  return `<h3><span class="step-icon">${ex.icon}</span>${ex.title}</h3><ul>${items}</ul>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ACTIVATE STEP — with morph animation
+// ─────────────────────────────────────────────────────────────
+function activateStep(stepIndex) {
+  const stages = STAGES[currentType];
+  if (stepIndex < 0 || stepIndex >= stages.length) return;
+
+  // Update progress
+  document.getElementById('progressFill').style.width = `${((stepIndex + 1) / stages.length) * 100}%`;
+  document.getElementById('stepCounter').textContent = `Step ${stepIndex + 1} / ${stages.length}`;
+
+  // Pipeline highlight
+  renderPipeline(currentType, stepIndex);
+
+  // Scroll panel into view
+  const panel = document.getElementById(`panel-${stepIndex}`);
+  if (panel) {
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  }
+
+  // Activate current panel
+  for (let i = 0; i <= stepIndex; i++) {
+    const p = document.getElementById(`panel-${i}`);
+    if (!p) continue;
+    const dot = document.getElementById(`dot-${i}`);
+    const tag = document.getElementById(`tag-${i}`);
+    const ann = document.getElementById(`ann-${i}`);
+    const exp = document.getElementById(`exp-${i}`);
+    const stage = stages[i];
+
+    const color = accentForStep(i);
+    p.style.setProperty('--step-color', color);
+
+    if (i === stepIndex) {
+      // Active panel
+      p.classList.add('active-panel');
+      dot.classList.remove('dim');
+      dot.style.background = color;
+      dot.style.boxShadow = `0 0 10px ${color}`;
+      tag.classList.add('active-tag');
+      tag.style.setProperty('--step-color', color);
+      ann.innerHTML = stage.annotation;
+
+      // Show mem/pt diagrams if present
+      const memDiv = document.getElementById(`mem-${i}`);
+      if (memDiv) {
+        memDiv.style.display = 'flex';
+        // highlight segments with a small delay
+        setTimeout(() => {
+          memDiv.querySelectorAll('.highlight-seg').forEach(el => {
+            el.style.background = 'rgba(74,157,232,0.2)';
+          });
+        }, 600);
+      }
+      const ptDiv = document.getElementById(`pt-${i}`);
+      if (ptDiv) {
+        ptDiv.style.display = 'block';
+        // animate table rows
+        setTimeout(() => {
+          ptDiv.querySelectorAll('.pt-table-row').forEach((row, ri) => {
+            setTimeout(() => row.classList.add('active-row'), ri * 200);
+          });
+        }, 400);
+      }
+
+      // Show explanation
+      if (exp) { exp.style.display = 'block'; }
+
+      // Trigger morph animation on addresses in this step
+      triggerMorphAnimation(i, stepIndex);
+
+    } else {
+      // Past steps — keep visible but dim slightly
+      p.classList.remove('active-panel');
+    }
+  }
+
+  // Dim future panels
+  for (let i = stepIndex + 1; i < stages.length; i++) {
+    const p = document.getElementById(`panel-${i}`);
+    if (!p) continue;
+    p.classList.remove('active-panel');
+    const ann = document.getElementById(`ann-${i}`);
+    if (ann) ann.innerHTML = `<span style="color:var(--blue-dark)">◆ Awaiting activation…</span>`;
+    const memDiv = document.getElementById(`mem-${i}`);
+    if (memDiv) memDiv.style.display = 'none';
+    const ptDiv = document.getElementById(`pt-${i}`);
+    if (ptDiv) ptDiv.style.display = 'none';
+    const exp = document.getElementById(`exp-${i}`);
+    if (exp) exp.style.display = 'none';
+    const dot = document.getElementById(`dot-${i}`);
+    if (dot) { dot.classList.add('dim'); dot.style.background = ''; dot.style.boxShadow = ''; }
+    const tag = document.getElementById(`tag-${i}`);
+    if (tag) tag.classList.remove('active-tag');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  MORPH ANIMATION — stagger through address tokens
+// ─────────────────────────────────────────────────────────────
+function triggerMorphAnimation(panelIdx) {
+  const codeEl = document.getElementById(`code-${panelIdx}`);
+  if (!codeEl) return;
+
+  // Find all colored address spans
+  const addressSelectors = '.addr-sym, .addr-rel, .addr-abs, .addr-virt, .addr-phys';
+  const tokens = codeEl.querySelectorAll(addressSelectors);
+
+  tokens.forEach((tok, i) => {
+    tok.classList.remove('morphed', 'pulsing');
+    setTimeout(() => {
+      tok.classList.add('morphed');
+    }, 100 + i * 120);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────────────────────────────────────
+function goToStep(i) {
+  currentStep = i;
+  activateStep(currentStep);
+}
+
+function nextStep() {
+  const max = STAGES[currentType].length - 1;
+  if (currentStep < max) {
+    currentStep++;
+    activateStep(currentStep);
+    return true;
+  }
+  return false;
+}
+
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    activateStep(currentStep);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  AUTOPLAY
+// ─────────────────────────────────────────────────────────────
+function startAutoplay() {
+  if (isPlaying) return;
+  isPlaying = true;
+  const btn = document.getElementById('playBtn');
+  btn.innerHTML = '<span class="icon">⏹</span> Stop';
+  btn.classList.add('primary');
+
+  function tick() {
+    const cont = nextStep();
+    if (cont) {
+      autoplayTimer = setTimeout(tick, getSpeed());
+    } else {
+      stopAutoplay();
+    }
+  }
+  autoplayTimer = setTimeout(tick, getSpeed());
+}
+
+function stopAutoplay() {
+  isPlaying = false;
+  clearTimeout(autoplayTimer);
+  const btn = document.getElementById('playBtn');
+  btn.innerHTML = '<span class="icon">▶</span> Autoplay';
+  btn.classList.remove('primary');
+}
+
+function toggleAutoplay() {
+  if (isPlaying) stopAutoplay();
+  else startAutoplay();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  INIT / SWITCH TYPE
+// ─────────────────────────────────────────────────────────────
+function switchType(type) {
+  stopAutoplay();
+  currentType = type;
+  currentStep = 0;
+
+  // Update tabs
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+
+  renderTheory(type);
+  renderPanels(type);
+  renderPipeline(type, 0);
+  activateStep(0);
+
+  document.getElementById('progressFill').style.width = `${(1/STAGES[type].length)*100}%`;
+  document.getElementById('stepCounter').textContent = `Step 1 / ${STAGES[type].length}`;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EVENT LISTENERS
+// ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchType(btn.dataset.type));
+});
+document.getElementById('playBtn').addEventListener('click', toggleAutoplay);
+document.getElementById('nextBtn').addEventListener('click', () => { stopAutoplay(); nextStep(); });
+document.getElementById('prevBtn').addEventListener('click', () => { stopAutoplay(); prevStep(); });
+
+// ─────────────────────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────────────────────
+switchType('compile');
+</script>
+</body>
+</html>
