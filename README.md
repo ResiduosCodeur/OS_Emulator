@@ -18,14 +18,14 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 
 - **System Calls**
 - **File Allocation**
-- **Simulation Of File System**
+- **Address Binding**
 - **Disk Scheduling Algorithms**
-- **Process Synchronization**
+- **Real Time OS Simulation**
 - **Deadlock**
 - **CPU Scheduling Algorithms**
 - **Internal and External Memory fragmentation**
 - **Page replacement**
 - **Boot Process Simulation**
-- **Inter Process Communication**
 - **Device Drivers**
+- **Inter Process Communication**
 - **Threads and Concurrency**
