@@ -24,3 +24,6 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - **Internal and External Memory fragmentation**
 - **Page replacement**
 - **Boot Process Simulation**
+- **Inter Process Communication**
+- **Device Drivers**
+- **Threads and Concurrency**
