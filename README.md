@@ -27,3 +27,4 @@ An OS Simulator project for the OS Lab course, implementing various core operati
 - **Inter Process Communication**
 - **Device Drivers**
 - **Threads and Concurrency**
+- **Address Binding**
